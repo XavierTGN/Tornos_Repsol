@@ -1,12 +1,21 @@
+/*
+-----------------------------------------------------------------------
+PARA CARGAR EN LILYGO T-ETH
+PULSAR BOTÓN DE BOOT
+PULSAR BOTÓN DE RESET
+SOLTAR BOTÓN DE RESET
+SOLTAR BOTÓN DE BOOT
+*/
+
 #include <ETH.h>
 #include <NTPClient.h>
 #include <WiFiUdp.h>
 #include <Wire.h>
 
 // DATOS DIRECCIÓN IP 
-IPAddress ip(10, 82, 103, 216);         // IP 
-IPAddress gateway(10, 82, 103, 209);    // Puerta de enlace
-IPAddress subnet(255, 255, 255, 240);   // Máscara de subred
+IPAddress ip(10, 82, 103, 217);         // IP                           
+IPAddress gateway(10, 82, 103, 209);    // Puerta de enlace             
+IPAddress subnet(255, 255, 255, 240);   // Máscara de subred        
 
 // DATOS SERVIDOR NTP
 const char* ntpServer = "172.24.147.1";
