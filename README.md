@@ -10,3 +10,4 @@ Carpeta CAYSEG Programacion-FINAL  son las carpetas aportadas por el Alberto
    <image src="https://github.com/user-attachments/assets/68bdf784-0488-40cf-bd5a-d26d58f1dddd">
    <p align="left">
    
+https://github.com/ropg/ezTime/blob/master/README.md    Eztime
