@@ -13,3 +13,5 @@ Carpeta CAYSEG Programacion-FINAL  son las carpetas aportadas por el Alberto
 https://github.com/ropg/ezTime/blob/master/README.md    Eztime
 
 https://community.platformio.org/t/how-to-use-jtag-built-in-debugger-of-the-esp32-s3-in-platformio/36042
+
+https://www.tempmail.us.com/es/hover/encantador-resaltado-de-fila-de-tabla-con-css-al-pasar-el-cursor
