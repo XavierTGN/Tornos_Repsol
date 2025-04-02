@@ -1,7 +1,7 @@
 #define WIDTH 240
 #define HEIGHT 320
 #define SMOOTH_FONT
-
+#define DEBUG(a) Serial.println(a);
 
 #include <TFT_eSPI.h>
 #include "repsol.h"
@@ -44,15 +44,17 @@ unsigned int colour = 0;
 char dt[16];
 char tm[16];
 
-bool horari_estiu=false;     //he contat una hora mes al horario estiu? true=si
-bool horari_hivern=false;     //he tret una hora menys al horario hivern? true=si
+bool horari_estiu = false;   //he contat una hora mes al horario estiu? true=si
+bool horari_hivern = false;  //he tret una hora menys al horario hivern? true=si
+int horari_seguent = 0;      //hora del seguent comprobacio
+bool es_horari_seguent = false;
 
 void setup() {
   Serial.begin(9600);
 
   setTime(00, 59, 40, 30, 3, 2025);  // 2h matinada 30 març, es hivern i que que restar 1 hora
   //setTime(2, 59, 55, 26, 10, 2025);  //3h matinada  26 oct 2025  començar el hivern
-
+  time_t t=now();
   carregar_hora();
 
   //time_t t = now(); // Store the current time in time
@@ -101,9 +103,42 @@ void loop(void) {
 
 
 
+
   if (targetTime < millis()) {
-
-
+    carregar_hora();
+    if (Serial.available() > 0) {
+      char data = Serial.read();
+      switch (data) {
+        case 'A':
+          setTime(00, 59, 40, 30, 3, 2025);  // 2h matinada 30 març, es hivern i que que restar 1 hora
+          time_t t=now();
+          delay(200);
+        case 'B':
+          setTime(2, 59, 55, 26, 10, 2025);  //En aquest moment es estiu.Que que suma 1 hora3h matinada  26 oct 2025  començar el hivern
+          time_t t=now();
+          delay(200);
+        case 'C':
+          setTime(22, 59, 55, 26, 10, 2025);  //En aquest moment es estiu.Que que suma 1 hora3h matinada  26 oct 2025  començar el hivern
+          time_t t=now();
+        case '+':
+          hh = hh + 1;
+          setTime(hh, mm, ss, day(t), month(t), year(t));  // Another way to set
+          time_t t=now();
+        case '-':
+          hh = hh - 1;
+          setTime(hh, mm, ss, day(t), month(t), year(t));  // Another way to set
+          time_t t=now();
+        case 'Q':
+          mm = mm + 1;
+          setTime(hh, mm, ss, day(t), month(t), year(t));  // Another way to set
+          time_t t=now();
+        case 'W':
+          mm = mm - 1;
+          setTime(hh, mm, ss, day(t), month(t), year(t));  // Another way to set
+          time_t t=now();
+      }
+      DEBUG((char)data);
+    }
     //txtSprite.pushToSprite(&background,2,3);
     //txtSprite.drawString(String(ss),0,0,6);
     //tft.setTextFont(1);
@@ -121,7 +156,7 @@ void loop(void) {
 
     // Set next update for 1 second later
     targetTime = millis() + 1000;
-    carregar_hora();
+    /////////////carregar_hora();
 
     //tft.setCursor(0, 0);
     //tft.setTextColor(ILI9341_WHITE);
@@ -218,66 +253,83 @@ void mensaje(String text_1, String text_2, int col_fons, int col_lletra) {
   win_total.println(text_2);    // Print the font name onto the TFT screen
   win_total.pushSprite(0, 0);
 }
-void carregar_hora() {
-  hh = hour();
-  mm = minute();
-  ss = second();
-  sprintf(dt, "%02d/%02d/%02d", year(),month(),day());
-  sprintf(tm, "%02d:%02d:%02d", hour(),minute(),second());
 
+void carregar_hora() {
   Serial.print(dt);
   Serial.print(" ");
   Serial.print(tm);
-  /*
-  if (IsDST(day(), month(), weekday()) == true) {
-    Serial.print("Es horario de estiu!!!!");
-    Serial.println(day());
-        Serial.println(month());
-            Serial.println(weekday());
+  Serial.print("->>>");
+  Serial.print(hh);
+  Serial.print(":");
+  Serial.print(mm);
+  Serial.print(":");
+  Serial.println(ss);
 
-  }*/
-  if (isDst_1(day(), month(), weekday(), hour()) ==true) {
-    Serial.println("Es horari estiu+1!!!!");
-    if (horari_estiu==false) {
+  hh = hour(t);
+  mm = minute(t);
+  ss = second(t);
+  sprintf(dt, "%02d/%02d/%02d", year(t), month(t), day(t));
+  sprintf(tm, "%02d:%02d:%02d", hour(t), minute(t), second(t));
+
+
+
+  if ((es_horari_seguent == true) && (hh > horari_seguent)) {
+    es_horari_seguent = false;
+    horari_seguent = 0;
+    if (isDst(day(), month(), weekday(), hour()) == true) {
+      //  es horari de estiu
+      Serial.println("Es horari estiu+1!!!!");
+      // es la primera deteccio de horari de estiu??
+      if (horari_estiu == false) {
         Serial.println("sumar 1 hora!!!!");
-        hh=hh+1;
+        hh = hh + 1;
+        es_horari_seguent = true;
+        horari_seguent = hh + 5;                      // despres de 5 horas tornara a fer la comprobacio de hivern, no es repeteix
         setTime(hh, mm, ss, day(), month(), year());  // Another way to set
-        horari_estiu=true;
-        horari_hivern=false;
-    }
-  }else{
+        horari_estiu = true;
+        horari_hivern = false;
+      }
+    } else {
+      /// Horari de hivern detectat
       Serial.println("Es horari hivern---1hora!!!!");
-      if (horari_hivern==false) {
-        hh=hh-1;
+      // es la primera deteccio de horari de estiu??
+      if (horari_hivern == false) {
+        hh = hh - 1;
+        es_horari_seguent = true;
+        horari_seguent = hh + 5;  // despres de 5 horas tornara a fer la comprobacio de hivern, no es repeteix
         Serial.println("restar 1 hora!!!!");
         setTime(hh, mm, ss, day(), month(), year());  // Another way to set
-        horari_estiu=false;
-        horari_hivern=true;
+        // Per no tarnar a pasar fins despres de molt temps
+        horari_estiu = false;
+        horari_hivern = true;
+      } else {
+        Serial.println("esta bloqueixat per una 5 horas!!!!");
       }
-
+    }
   }
 }
+//=======================================================
+// ¿Estamos en horario de verano hoy?-->SI   retorna true
+//=======================================================
 
+bool isDst(int dia, int mes, int dia_semana, int hora) {
+  //Enero, febrero, noviembre y diciembre están fuera.
+  if (mes < 3 || mes > 10) { return false; }
 
+  //Abril a septiembre están dentro
+  if (mes > 3 && mes < 10) { return true; }
 
-//===============================
-// ¿Estamos en horario de verano hoy?
-//===============================
+  int domingo_anterior = dia - dia_semana + 1;
+  //En marzo, estamos en DST si es después del último domingo.
+  if (mes == 3 && domingo_anterior >= 25 && dia_semana == 1) { return hora >= 2; }
+  if (mes == 3) { return domingo_anterior >= 25; }
 
-bool IsDST(int day, int month, int dow) {
-
-// El horario de verano se aplica desde el segundo domingo de marzo hasta el primer domingo de noviembre
-  // Nunca en enero, febrero o diciembre
-  if (month < 3 || month > 11) { return false; }
-  // Siempre en abril a octubre
-  if (month > 3 && month < 11) { return true; }
-  // En marzo, horario de verano si el domingo anterior fue el 8 o después.
-  // Comienza a las 2 am del segundo domingo de marzo
-  int previousSunday = day - dow;
-  if (month == 3) { return previousSunday >= 7; }
-  // De lo contrario, noviembre, horario de verano si es antes del primer domingo, es decir, el domingo anterior debe ser antes del 1
-  return previousSunday < 0;
+  //En octubre, estamos en DST si es antes del último domingo
+  if (domingo_anterior < 25) { return true; }
+  if (domingo_anterior >= 25 && dia_semana == 1) { return hora < 3; }
+  return false;
 }
+
 // Hora Central Europea
 // De CET a CEST:
 //    último domingo de marzo a las 02:00 hora local -> 03:00
@@ -289,20 +341,3 @@ bool IsDST(int day, int month, int dow) {
 // dia_semana    1 .. 7   (día de la semana, 1=domingo)
 // hora   0 .. 23 hora local
 //
-bool isDst_1(int dia, int mes, int dia_semana, int hora) {
-  //Enero, febrero, noviembre y diciembre están fuera.
-  if (mes < 3 || mes > 10) { return false; }
-	
-  //Abril a septiembre están dentro
-  if (mes > 3 && mes < 10) { return true; }
-	
-  int domingo_anterior = dia - dia_semana + 1;
-  //En marzo, estamos en DST si es después del último domingo.
-  if (mes == 3 && domingo_anterior >=25 && dia_semana ==1) { return hora >= 2; }
-  if (mes == 3) { return domingo_anterior >= 25; }
-
-  //En octubre, estamos en DST si es antes del último domingo
-  if (domingo_anterior < 25) { return true; }
-  if (domingo_anterior >=25 && dia_semana ==1) { return hora < 3; }
-  return false;
-}
