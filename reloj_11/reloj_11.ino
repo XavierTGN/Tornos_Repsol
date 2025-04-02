@@ -44,9 +44,12 @@ unsigned int colour = 0;
 char dt[16];
 char tm[16];
 
+int data =0;
+
+
 bool horari_estiu = false;   //he contat una hora mes al horario estiu? true=si
 bool horari_hivern = false;  //he tret una hora menys al horario hivern? true=si
-int horari_seguent = 0;      //hora del seguent comprobacio
+int horari_seguent = -100;      //hora del seguent comprobacio
 bool es_horari_seguent = false;
 
 void setup() {
@@ -54,7 +57,7 @@ void setup() {
 
   setTime(00, 59, 40, 30, 3, 2025);  // 2h matinada 30 març, es hivern i que que restar 1 hora
   //setTime(2, 59, 55, 26, 10, 2025);  //3h matinada  26 oct 2025  començar el hivern
-  time_t t=now();
+
   carregar_hora();
 
   //time_t t = now(); // Store the current time in time
@@ -100,43 +103,46 @@ void setup() {
 }
 
 void loop(void) {
-
-
-
-
+  //time_t t = now();//Declaramos la variable time_t t
   if (targetTime < millis()) {
     carregar_hora();
     if (Serial.available() > 0) {
-      char data = Serial.read();
-      switch (data) {
-        case 'A':
+      data = Serial.read();
+      Serial.println(data, DEC);
+       if (data== 'A'){
           setTime(00, 59, 40, 30, 3, 2025);  // 2h matinada 30 març, es hivern i que que restar 1 hora
-          time_t t=now();
+          //time_t t=now();
           delay(200);
-        case 'B':
+       }
+       if (data== 'B'){
           setTime(2, 59, 55, 26, 10, 2025);  //En aquest moment es estiu.Que que suma 1 hora3h matinada  26 oct 2025  començar el hivern
-          time_t t=now();
+          //time_t t=now();
           delay(200);
-        case 'C':
+       }
+       if (data== 'C'){
           setTime(22, 59, 55, 26, 10, 2025);  //En aquest moment es estiu.Que que suma 1 hora3h matinada  26 oct 2025  començar el hivern
-          time_t t=now();
-        case '+':
+          //time_t t=now();
+        }
+      if (data== '+'){
           hh = hh + 1;
-          setTime(hh, mm, ss, day(t), month(t), year(t));  // Another way to set
-          time_t t=now();
-        case '-':
-          hh = hh - 1;
-          setTime(hh, mm, ss, day(t), month(t), year(t));  // Another way to set
-          time_t t=now();
-        case 'Q':
-          mm = mm + 1;
-          setTime(hh, mm, ss, day(t), month(t), year(t));  // Another way to set
-          time_t t=now();
-        case 'W':
-          mm = mm - 1;
-          setTime(hh, mm, ss, day(t), month(t), year(t));  // Another way to set
-          time_t t=now();
+          setTime(hh, mm, ss, day(), month(), year());  // Another way to set
+          //time_t t=now();
       }
+      if (data== '-'){
+          hh = hh - 1;
+          setTime(hh, mm, ss, day(), month(), year());  // Another way to set
+          //time_t t=now();
+      }
+      if (data== 'Q'){
+          mm = mm + 1;
+          setTime(hh, mm, ss, day(), month(), year());  // Another way to set
+          //time_t t=now();
+      }
+      if (data== 'W'){
+          mm = mm - 1;
+          setTime(hh, mm, ss, day(), month(), year());  // Another way to set
+          //time_t t=now();
+       }
       DEBUG((char)data);
     }
     //txtSprite.pushToSprite(&background,2,3);
@@ -265,17 +271,22 @@ void carregar_hora() {
   Serial.print(":");
   Serial.println(ss);
 
-  hh = hour(t);
-  mm = minute(t);
-  ss = second(t);
-  sprintf(dt, "%02d/%02d/%02d", year(t), month(t), day(t));
-  sprintf(tm, "%02d:%02d:%02d", hour(t), minute(t), second(t));
+  hh = hour();
+  mm = minute();
+  ss = second();
+  sprintf(dt, "%02d/%02d/%02d", year(), month(), day());
+  sprintf(tm, "%02d:%02d:%02d", hour(), minute(), second());
+
+  Serial.print("es_horari_seguent=");
+  Serial.print(es_horari_seguent);
+  Serial.print(" horari_seguent=");
+  Serial.println(horari_seguent);
 
 
-
-  if ((es_horari_seguent == true) && (hh > horari_seguent)) {
+  //if ((es_horari_seguent == true) && (hh > horari_seguent)) {
+  if (hh > horari_seguent) {
     es_horari_seguent = false;
-    horari_seguent = 0;
+    horari_seguent = -100;
     if (isDst(day(), month(), weekday(), hour()) == true) {
       //  es horari de estiu
       Serial.println("Es horari estiu+1!!!!");
