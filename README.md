@@ -17,6 +17,6 @@ https://community.platformio.org/t/how-to-use-jtag-built-in-debugger-of-the-esp3
 https://www.tempmail.us.com/es/hover/encantador-resaltado-de-fila-de-tabla-con-css-al-pasar-el-cursor
 
    <p align="left" width="100" height="100">
-      <image src="https://github.com/user-attachments/assets/6bcf6972-876c-4c65-b88a-6cd186f90cc4">
+      <image src="https://github.com/user-attachments/assets/4ce2139b-1465-4b13-a4a1-10e05cf591e9">
    </p>
 
