@@ -49,7 +49,7 @@ int data =0;
 
 bool horari_estiu = false;   //he contat una hora mes al horario estiu? true=si
 bool horari_hivern = false;  //he tret una hora menys al horario hivern? true=si
-int horari_seguent = -100;      //hora del seguent comprobacio
+
 bool es_horari_seguent = false;
 
 void setup() {
@@ -175,6 +175,8 @@ void loop(void) {
     ////RepsolSprite.pushImage(0, 0, 110, 80, repsol);
     ////RepsolSprite.pushToSprite(&background, 100, 0, TFT_BLACK);
 
+
+    /*
     // Update digital time
     int xpos = 0;
     int ypos = 110;  // Top left corner ot clock text, about half way down
@@ -182,6 +184,11 @@ void loop(void) {
 
     if (omm != mm) {  // Redraw hours and minutes time every minute
       omm = mm;
+      // posar tipos de lletra i amplada
+      win_reloj.setCursor(10, 100);
+      win_reloj.setTextFont(7);
+      win_reloj.setTextSize(1);
+      
       // Draw hours and minutes
       if (hh < 10) xpos += win_reloj.drawChar('0', xpos, ypos, lletra_gran);  // Add hours leading zero for 24 hr clock
       xpos += win_reloj.drawNumber(hh, xpos, ypos, lletra_gran);              // Draw hours
@@ -209,27 +216,24 @@ void loop(void) {
       if (ss < 10) xpos += win_reloj.drawChar('0', xpos, ysecs, lletra_petit);  // Add leading zero
       win_reloj.drawNumber(ss, xpos, ysecs, lletra_petit);                      // Draw seconds
     }
+    */
   }
-  /*
-  for (int i = 2; i <= 4000; i = i + 100) {
-      
-        win_reloj.setCursor(10, 100);
-        //win_reloj.pushSprite(0, 0);
-        //win_reloj.fillSprite(TFT_BLACK);
-        win_reloj.setTextColor(TFT_GREEN,TFT_BLACK);
-        win_reloj.setFreeFont(FSI24);       // Select Free Serif 24 point font
-        //win_total.drawString("Texto centrado", 30, 10);
-        win_reloj.print(i);          // Print the font name onto the TFT screen
-
-       win_reloj.pushSprite(0, 0);
-  */
-
-  win_reloj.setCursor(10, 100);
+  // Hora
+    // Set text padding to 10 pixels
+  win_reloj.setTextPadding(10);
+  win_reloj.setCursor(1, 50);
   win_reloj.setTextFont(7);
   win_reloj.setTextSize(1);
   //win_reloj.drawNumber(i, 50, 50, 7);
-  //win_reloj.drawString("00:33:22",10,100,4);
-  win_reloj.print(tm);
+  win_reloj.drawString(tm,10,50,6);
+  //////////////////win_reloj.print(tm);
+//  date
+  win_reloj.setCursor(1, 1);
+  win_reloj.setTextFont(2);
+  win_reloj.setTextSize(2);
+  //win_reloj.print(dt);
+  win_reloj.drawString(dt,1,5,2);
+
   win_reloj.pushSprite(0, 0);
 }
 
@@ -274,19 +278,16 @@ void carregar_hora() {
   hh = hour();
   mm = minute();
   ss = second();
-  sprintf(dt, "%02d/%02d/%02d", year(), month(), day());
+  sprintf(dt, "%02d/%02d/%02d", day(),month(),year());
   sprintf(tm, "%02d:%02d:%02d", hour(), minute(), second());
 
   Serial.print("es_horari_seguent=");
   Serial.print(es_horari_seguent);
-  Serial.print(" horari_seguent=");
-  Serial.println(horari_seguent);
 
-
-  //if ((es_horari_seguent == true) && (hh > horari_seguent)) {
-  if (hh > horari_seguent) {
-    es_horari_seguent = false;
-    horari_seguent = -100;
+  if ((es_horari_seguent == true) && (hh > 5)) {
+    es_horari_seguent = false;    
+  }
+  if (es_horari_seguent == false) {
     if (isDst(day(), month(), weekday(), hour()) == true) {
       //  es horari de estiu
       Serial.println("Es horari estiu+1!!!!");
@@ -295,7 +296,6 @@ void carregar_hora() {
         Serial.println("sumar 1 hora!!!!");
         hh = hh + 1;
         es_horari_seguent = true;
-        horari_seguent = hh + 5;                      // despres de 5 horas tornara a fer la comprobacio de hivern, no es repeteix
         setTime(hh, mm, ss, day(), month(), year());  // Another way to set
         horari_estiu = true;
         horari_hivern = false;
@@ -307,7 +307,6 @@ void carregar_hora() {
       if (horari_hivern == false) {
         hh = hh - 1;
         es_horari_seguent = true;
-        horari_seguent = hh + 5;  // despres de 5 horas tornara a fer la comprobacio de hivern, no es repeteix
         Serial.println("restar 1 hora!!!!");
         setTime(hh, mm, ss, day(), month(), year());  // Another way to set
         // Per no tarnar a pasar fins despres de molt temps
