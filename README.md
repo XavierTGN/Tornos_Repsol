@@ -15,3 +15,7 @@ https://github.com/ropg/ezTime/blob/master/README.md    Eztime
 https://community.platformio.org/t/how-to-use-jtag-built-in-debugger-of-the-esp32-s3-in-platformio/36042
 
 https://www.tempmail.us.com/es/hover/encantador-resaltado-de-fila-de-tabla-con-css-al-pasar-el-cursor
+
+   <p align="left" width="100" height="100">
+      <image src="https://github.com/user-attachments/assets/6bcf6972-876c-4c65-b88a-6cd186f90cc4">
+   </p>
