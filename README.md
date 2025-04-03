@@ -19,3 +19,4 @@ https://www.tempmail.us.com/es/hover/encantador-resaltado-de-fila-de-tabla-con-c
    <p align="left" width="100" height="100">
       <image src="https://github.com/user-attachments/assets/6bcf6972-876c-4c65-b88a-6cd186f90cc4">
    </p>
+
