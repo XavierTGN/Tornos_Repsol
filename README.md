@@ -1,5 +1,8 @@
 # Tornos_Repsol
 
+Versiones de Arduino:
+https://github.com/arduino/arduino-ide/releases/tag/2.3.3
+
 
 Carpeta CAYSEG - Tornos
 Carpeta CAYSEG Programacion-FINAL  son las carpetas aportadas por el Alberto
