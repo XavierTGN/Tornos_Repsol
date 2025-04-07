@@ -3,6 +3,7 @@
 Versiones de Arduino:
 https://github.com/arduino/arduino-ide/releases/tag/2.3.3
 
+ESP32-S3-WROOM-1U-N16R8 16 MB (Quad SPI) 8 MB (Octal SPI)
 
 Carpeta CAYSEG - Tornos
 Carpeta CAYSEG Programacion-FINAL  son las carpetas aportadas por el Alberto
