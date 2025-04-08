@@ -116,6 +116,10 @@ void setup() {
 
   setTime(03, 59, 40, 30, 3, 2025);  // 2h matinada 30 març, es hivern i que que restar 1 hora
                                      //setTime(2, 59, 55, 26, 10, 2025);  //3h matinada  26 oct 2025  començar el hivern
+
+  const char *ssid = "MI-9";
+  const char *password = "viscaTarracoII";
+
   Serial.print("Connecting to WiFi network ");
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
@@ -181,7 +185,7 @@ void setup() {
   //time_t t = now(); // Store the current time in time
   targetTime = millis() + 1000;
   tft.init();
-  tft.setRotation(1);
+  tft.setRotation(3);
 
   tft.fillScreen(TFT_BLACK);
   /*
@@ -299,7 +303,7 @@ void mensaje(String text_1, String text_2, int col_fons, int col_lletra) {
   win_total.pushSprite(0, 0);
   delay(2000);
   //tft.init();
-  tft.setRotation(1);
+  tft.setRotation(3);
 
   tft.fillScreen(TFT_BLACK);
 
