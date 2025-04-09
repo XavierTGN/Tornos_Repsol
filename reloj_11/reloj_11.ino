@@ -1,10 +1,12 @@
-#define WIDTH 180   // 240
-#define HEIGHT 320  //
+#define WIDTH 240
+#define HEIGHT 320
 #define SMOOTH_FONT
 #define DEBUG(a) Serial.println(a);
 
 #include <TFT_eSPI.h>
 #include "repsol.h"
+#include "logo.h"
+
 #include "Free_Fonts.h"  // Include the header file attached to this sketch
 #include <TimeLib.h>
 #include <WiFi.h>
@@ -62,8 +64,6 @@ uint8_t mesAnt;
 uint8_t anoActRec;
 uint8_t anoAnt;
 uint8_t segundosAntI2C;
-
-long time_out=0;
 
 TFT_eSPI tft = TFT_eSPI();
 //TFT_eSprite win_mensaje = TFT_eSprite(&tft);
@@ -124,14 +124,8 @@ void setup() {
 
   Serial.print("Connecting to WiFi network ");
   WiFi.begin(ssid, password);
-  time_out = millis()+10000;
-  Serial.print (time_out);
-  while ((WiFi.status() != WL_CONNECTED) && (time_out>=millis())){
-    Serial.print (millis());
-    Serial.print ("<<<->>>");
-
-    Serial.println (time_out);
-    delay(1000);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
     Serial.print(".");
   }
 
@@ -231,6 +225,7 @@ void setup() {
    win_reloj.createSprite(320, 240);
   tft.setSwapBytes(true);
   tft.pushImage(200, 0, 110, 80, repsol);
+  tft.pushImage(150, 0, 87, 60, logo_REPSOL);
   delay(2000);
   Grids();
 }
@@ -275,6 +270,7 @@ void Date_hora(){
 
   tft.setSwapBytes(true);
   tft.pushImage(200, 0, 110, 80, repsol);
+  tft.pushImage(1, 170, 87, 60, logo_REPSOL);
 
   tft.setTextPadding(10);
   tft.setCursor(1, 100);
