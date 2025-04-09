@@ -1,5 +1,5 @@
-#define WIDTH 240
-#define HEIGHT 320
+#define WIDTH 180   // 240
+#define HEIGHT 320  //
 #define SMOOTH_FONT
 #define DEBUG(a) Serial.println(a);
 
@@ -63,6 +63,8 @@ uint8_t anoActRec;
 uint8_t anoAnt;
 uint8_t segundosAntI2C;
 
+long time_out=0;
+
 TFT_eSPI tft = TFT_eSPI();
 //TFT_eSprite win_mensaje = TFT_eSprite(&tft);
 TFT_eSprite win_reloj = TFT_eSprite(&tft);
@@ -122,8 +124,14 @@ void setup() {
 
   Serial.print("Connecting to WiFi network ");
   WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
+  time_out = millis()+10000;
+  Serial.print (time_out);
+  while ((WiFi.status() != WL_CONNECTED) && (time_out>=millis())){
+    Serial.print (millis());
+    Serial.print ("<<<->>>");
+
+    Serial.println (time_out);
+    delay(1000);
     Serial.print(".");
   }
 
