@@ -490,7 +490,36 @@ void date_hora_guio() {
 
     // Set next update for 1 second later
     targetTime = millis() + 1000;
-    carregar_hora();
+    ////////////////////carregar_hora();
+
+
+  tft.setCursor(2, 2, 2);
+  // Set the font colour to be white with a black background, set text size multiplier to 1
+  tft.setTextColor(TFT_WHITE,TFT_BLACK);  
+  tft.setTextSize(1);
+  // We can now plot text on screen using the "print" class
+  tft.drawRect(1, 1, 320, 30, TFT_RED);
+  //tft.fillRect(0, 0, 319, 24,TFT_GREEN);
+  tft.drawRect(1, 31, 320, 200, TFT_RED);
+  
+  tft.print(dt);
+  tft.println(" C.I. TARRAGONA");
+
+  // Set the font colour to be yellow with no background, set to font 7
+  tft.setTextColor(TFT_YELLOW); tft.setTextFont(6);
+
+
+
+/*
+
+      tft.setCursor(10, 10,3);
+      //tft.setTextFont(3);
+      tft.setTextSize(1);
+      // Draw hours and minutes
+      tft.setTextColor(TFT_RED, TFT_BLACK);  
+      tft.drawChar('REPSOL:', 10, 10, lletra_petit); 
+      tft.println("Hello World!");
+*/
 
     //tft.setCursor(0, 0);
     //tft.setTextColor(ILI9341_WHITE);
@@ -500,7 +529,7 @@ void date_hora_guio() {
 
     // Update digital time
     int xpos = 0;
-    int ypos = 80;  // Top left corner ot clock text, about half way down
+    int ypos = 110;  // Top left corner ot clock text, about half way down
     int ysecs = ypos + 24;
 
     if (omm != mm) {  // Redraw hours and minutes time every minute
