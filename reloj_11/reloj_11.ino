@@ -11,7 +11,7 @@
 #include <TimeLib.h>
 #include <WiFi.h>
 #include "time.h"
-#include <Wire.h>                             // Comunicación I2C
+#include <Wire.h>  // Comunicación I2C
 
 const char *ssid = "MOVISTAR-WIFI6-6810";
 const char *password = "N9HEPszqVUT93Js79xqs";
@@ -222,27 +222,26 @@ void setup() {
   win_reloj.pushSprite(0, 0);
   ////////win_reloj.pushToSprite(&logo,100,10,TFT_BLACK);
   ///////////logo.pushImage(0, 0, 110, 80, repsol);
-   win_reloj.createSprite(320, 240);
+  win_reloj.createSprite(320, 240);
   tft.setSwapBytes(true);
-  tft.pushImage(200, 0, 110, 80, repsol);
-  tft.pushImage(150, 0, 87, 60, logo_REPSOL);
-  delay(2000);
-  Grids();
+  ////////////////////////////tft.pushImage(200, 0, 110, 80, repsol);
+  /////////////////////////////tft.pushImage(150, 0, 87, 60, logo_REPSOL);
+  //////////////delay(2000);
+  //////////////Grids();
 }
 
 void loop(void) {
   llegir_DI();
   //time_t t = now();//Declaramos la variable time_t t
   opcions_teclat();
-  //date_hora_guio();
-  Date_hora();
+  date_hora_guio();
+  //Date_hora();
 }
 
 //win_reloj.fillSprite(0);
-void llegir_DI(){
-/*
-
-    // VARIABLES LEEN ESTADO DE LAS ENTRADAS IN_X
+void llegir_DI() {
+  /*
+  // VARIABLES LEEN ESTADO DE LAS ENTRADAS IN_X
   if (digitalRead(PIN_IN_1)==HIGH){
     mensaje("ACCESO","CONCEDIDO", TFT_GREEN, TFT_WHITE);
   }
@@ -263,14 +262,14 @@ void llegir_DI(){
   }
   */
 }
-void Date_hora(){
-    // Hora
+void Date_hora() {
+  // Hora
   carregar_hora();
-  // Set text padding to 10 pixels
+  //Set text padding to 10 pixels
 
-  tft.setSwapBytes(true);
-  tft.pushImage(200, 0, 110, 80, repsol);
-  tft.pushImage(1, 170, 87, 60, logo_REPSOL);
+  //tft.setSwapBytes(true);
+  //tft.pushImage(200, 0, 110, 80, repsol);
+  //tft.pushImage(1, 170, 87, 60, logo_REPSOL);
 
   tft.setTextPadding(10);
   tft.setCursor(1, 100);
@@ -280,13 +279,13 @@ void Date_hora(){
   tft.drawString(tm, 1, 80, 8);
   //////////////////tft.print(tm);
   //  date
-  tft.setCursor(1, 1);
+  tft.setCursor(1, 10);
   tft.setTextFont(2);
   tft.setTextSize(2);
-  //tft.print(dt);
+  tft.print(dt);
   tft.drawString(dt, 1, 5, 2);
 
-  win_reloj.pushSprite(0, 0);
+  //win_reloj.pushSprite(0, 0);
 
   //Serial.println("imprimir a tft--->");
   win_reloj.fillSprite(0);
@@ -456,13 +455,13 @@ void opcions_teclat() {
       Grids();
     }
     if (data == 'N') {
-        date_hora_guio();
+      date_hora_guio();
     }
     if (data == 'M') {
       mensaje("    ACCESO", "    PERMITIDO", TFT_GREEN, TFT_BLACK);
       delay(2000);
       win_total.fillSprite(TFT_BLACK);
-            mensaje("    ACCESO", "    DENEGADO", TFT_RED, TFT_WHITE);
+      mensaje("    ACCESO", "    DENEGADO", TFT_RED, TFT_WHITE);
       delay(2000);
       win_total.fillSprite(TFT_WHITE);
     }
@@ -470,8 +469,8 @@ void opcions_teclat() {
   }
 }
 
-void date_hora_guio(){
-   if (targetTime < millis()) {
+void date_hora_guio() {
+  if (targetTime < millis()) {
     carregar_hora();
 
     //txtSprite.pushToSprite(&background,2,3);
@@ -498,10 +497,10 @@ void date_hora_guio(){
     ////background.pushSprite(0, 0);
     ////RepsolSprite.pushImage(0, 0, 110, 80, repsol);
     ////RepsolSprite.pushToSprite(&background, 100, 0, TFT_BLACK);
-    
+
     // Update digital time
     int xpos = 0;
-    int ypos = 100;  // Top left corner ot clock text, about half way down
+    int ypos = 80;  // Top left corner ot clock text, about half way down
     int ysecs = ypos + 24;
 
     if (omm != mm) {  // Redraw hours and minutes time every minute
@@ -511,34 +510,33 @@ void date_hora_guio(){
       tft.setTextFont(7);
       tft.setTextSize(1);
       // Draw hours and minutes
-      tft.setTextColor(0x39C4, TFT_BLACK);                                    // Set colour to grey to dim colon
-      if (hh < 10) xpos += tft.drawChar('0', xpos, ypos, lletra_gran);       // Add hours leading zero for 24 hr clock
-      xpos += tft.drawNumber(hh, xpos, ypos, lletra_gran);                  // Draw hours
-      xcolon = xpos;                                                       // Save colon coord for later to flash on/off later
+      tft.setTextColor(TFT_YELLOW, TFT_BLACK);                          // Set colour to grey to dim colon
+      if (hh < 10) xpos += tft.drawChar('0', xpos, ypos, lletra_gran);  // Add hours leading zero for 24 hr clock
+      xpos += tft.drawNumber(hh, xpos, ypos, lletra_gran);              // Draw hours
+      xcolon = xpos;                                                    // Save colon coord for later to flash on/off later
       xpos += tft.drawChar(':', xpos, ypos - 8, lletra_gran);
-      if (mm < 10) xpos += tft.drawChar('0', xpos, ypos, lletra_gran);   // Add minutes leading zero
+      if (mm < 10) xpos += tft.drawChar('0', xpos, ypos, lletra_gran);  // Add minutes leading zero
       xpos += tft.drawNumber(mm, xpos, ypos, lletra_gran);              // Draw minutes
-      xsecs = xpos;                                                    // Sae seconds 'x' position for later display updates
+      xsecs = xpos;                                                     // Sae seconds 'x' position for later display updates
     }
     if (oss != ss) {  // Redraw seconds time every second
       oss = ss;
       xpos = xsecs;
 
-      if (ss % 2) {                                                   // Flash the colons on/off
+      if (ss % 2) {                                             // Flash the colons on/off
         tft.setTextColor(0x39C4, TFT_BLACK);                    // Set colour to grey to dim colon
         tft.drawChar(':', xcolon, ypos - 8, lletra_gran);       // Hour:minute colon
         xpos += tft.drawChar(':', xsecs, ysecs, lletra_petit);  // Seconds colon
         tft.setTextColor(TFT_YELLOW, TFT_BLACK);                // Set colour back to yellow
       } else {
-        tft.drawChar(':', xcolon, ypos - 8, lletra_gran);  // Hour:minute colon
-        xpos += tft.drawChar(':', xsecs, ysecs, lletra_petit);   // Seconds colon
+        tft.drawChar(':', xcolon, ypos - 8, lletra_gran);       // Hour:minute colon
+        xpos += tft.drawChar(':', xsecs, ysecs, lletra_petit);  // Seconds colon
       }
 
       //Draw seconds
       if (ss < 10) xpos += tft.drawChar('0', xpos, ysecs, lletra_petit);  // Add leading zero
       tft.drawNumber(ss, xpos, ysecs, lletra_petit);                      // Draw seconds
     }
-    
   }
 }
 
