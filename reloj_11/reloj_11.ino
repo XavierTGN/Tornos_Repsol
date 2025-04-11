@@ -21,6 +21,8 @@ const long gmtOffset_sec = 3600L * 1;
 const int daylightOffset_sec = 1;
 
 
+struct tm timeinfo;
+
 //  conexion comunicaciones   NO TOCAR *********************
 #define TFT_MISO 16
 #define TFT_MOSI 7
@@ -91,8 +93,10 @@ byte xcolon = 0, xsecs = 0;
 unsigned int colour = 0;
 char dt[16];
 char tm[16];
+char sm[16];
 
 int data = 0;
+long temps_out=0;
 
 
 bool horari_estiu = false;   //he contat una hora mes al horario estiu? true=si
@@ -117,31 +121,28 @@ void setup() {
   Serial.begin(9600);
 
   setTime(03, 59, 40, 30, 3, 2025);  // 2h matinada 30 març, es hivern i que que restar 1 hora
-                                     //setTime(2, 59, 55, 26, 10, 2025);  //3h matinada  26 oct 2025  començar el hivern
 
   const char *ssid = "MI-9";
   const char *password = "viscaTarracoII";
 
   Serial.print("Connecting to WiFi network ");
   WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
+  temps_out=millis()+5000;
+  while ((WiFi.status() != WL_CONNECTED) && (temps_out>=millis())){
     delay(500);
     Serial.print(".");
   }
-
-  Serial.println("conectat");
+  if (WL_CONNECTED != 3){
+    setTime(03, 3, 33, 30, 3, 2025);  // 2h matinada 30 març, es hivern i que que restar 1 hora
+  }else{
+    Serial.println("conectat");
+    sincro_NTP();
+  }
 
   /*
         Sync time with NTP server and update ESP32 RTC
         getLocalTime() return false if time is not set
     */
-  Serial.print("Syncing time with NTP server ");
-  struct tm timeinfo;
-  while (!getLocalTime(&timeinfo)) {
-    configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-    delay(500);
-    Serial.print("-");
-  }
 
   Serial.println("");
 
@@ -167,6 +168,8 @@ void setup() {
 
   sprintf(dt, "%02d/%02d/%02d", day(), month(), year());
   sprintf(tm, "%02d:%02d:%02d", hour(), minute(), second());
+  sprintf(sm, "%02d", second());
+
 
   Serial.print("dt-->");
   Serial.println(dt);
@@ -228,16 +231,91 @@ void setup() {
   /////////////////////////////tft.pushImage(150, 0, 87, 60, logo_REPSOL);
   //////////////delay(2000);
   //////////////Grids();
+    targetTime = millis() + 1000;
 }
 
 void loop(void) {
   llegir_DI();
   //time_t t = now();//Declaramos la variable time_t t
   opcions_teclat();
-  date_hora_guio();
+  //date_hora_guio();
   //Date_hora();
+  rellotge();
 }
+void sincro_NTP(){
+  Serial.print("Syncing time with NTP server ");
 
+  
+  temps_out=millis()+5000;
+  while ((!getLocalTime(&timeinfo))  && (temps_out>=millis())) {
+    configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+    delay(500);
+    Serial.print("-");
+  }
+
+}
+void rellotge(){
+  hh=hour();
+  mm=minute();
+  ss=second();
+ if (targetTime < millis()) {
+    // Set next update for 1 second later
+    targetTime = millis() + 1000;
+    /*
+    // Adjust the time values by adding 1 second
+    ss++;              // Advance second
+    if (ss == 60) {    // Check for roll-over
+      ss = 0;          // Reset seconds to zero
+      omm = mm;        // Save last minute time for display update
+      mm++;            // Advance minute
+      if (mm > 59) {   // Check for roll-over
+        mm = 0;
+        hh++;          // Advance hour
+        if (hh > 23) { // Check for 24hr roll-over (could roll-over on 13)
+          hh = 0;      // 0 for 24 hour clock, set to 1 for 12 hour clock
+        }
+      }
+    }
+    */
+
+    // Update digital time
+    int xpos = 0;
+    int ypos = 85; // Top left corner ot clock text, about half way down
+    int ysecs = ypos + 24;
+
+    if (omm != mm) { // Redraw hours and minutes time every minute
+      omm = mm;
+      // Draw hours and minutes
+      if (hh < 10) xpos += tft.drawChar('0', xpos, ypos, lletra_gran); // Add hours leading zero for 24 hr clock
+      xpos += tft.drawNumber(hh, xpos, ypos, lletra_gran);             // Draw hours
+      xcolon = xpos; // Save colon coord for later to flash on/off later
+      xpos += tft.drawChar(':', xpos, ypos - 8,lletra_gran);
+      if (mm < 10) xpos += tft.drawChar('0', xpos, ypos, lletra_gran); // Add minutes leading zero
+      xpos += tft.drawNumber(mm, xpos, ypos, lletra_gran);             // Draw minutes
+      xsecs = xpos; // Sae seconds 'x' position for later display updates
+    }
+    if (oss != ss) { // Redraw seconds time every second
+      oss = ss;
+      xpos = xsecs;
+
+      if (ss % 2) { // Flash the colons on/off
+        tft.setTextColor(0x39C4, TFT_BLACK);        // Set colour to grey to dim colon
+        tft.drawChar(':', xcolon, ypos - 8, lletra_gran);     // Hour:minute colon
+        xpos += tft.drawChar(':', xsecs, ysecs, 6); // Seconds colon
+        tft.setTextColor(TFT_YELLOW, TFT_BLACK);    // Set colour back to yellow
+      }
+      else {
+        tft.drawChar(':', xcolon, ypos - 8, lletra_gran);     // Hour:minute colon
+        xpos += tft.drawChar(':', xsecs, ysecs, 6); // Seconds colon
+      }
+
+      //Draw seconds
+      if (ss < 10) xpos += tft.drawChar('0', xpos, ysecs,lletra_petit); // Add leading zero
+      tft.drawNumber(ss, xpos, ysecs, lletra_petit);                     // Draw seconds
+    }
+  }
+
+}
 //win_reloj.fillSprite(0);
 void llegir_DI() {
   /*
@@ -493,24 +571,26 @@ void date_hora_guio() {
     ////////////////////carregar_hora();
 
 
-  tft.setCursor(2, 2, 2);
-  // Set the font colour to be white with a black background, set text size multiplier to 1
-  tft.setTextColor(TFT_WHITE,TFT_BLACK);  
-  tft.setTextSize(1);
-  // We can now plot text on screen using the "print" class
-  tft.drawRect(1, 1, 320, 30, TFT_RED);
-  //tft.fillRect(0, 0, 319, 24,TFT_GREEN);
-  tft.drawRect(1, 31, 320, 200, TFT_RED);
-  
-  tft.print(dt);
-  tft.println(" C.I. TARRAGONA");
+    tft.setCursor(10, 10, 2);
+    // Set the font colour to be white with a black background, set text size multiplier to 1
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    tft.setTextSize(1);
+    // We can now plot text on screen using the "print" class
+    tft.drawRect(1, 1, 320, 30, TFT_RED);
+    //tft.fillRect(0, 0, 319, 24,TFT_GREEN);
+    tft.drawRect(1, 31, 320, 200, TFT_RED);
 
-  // Set the font colour to be yellow with no background, set to font 7
-  tft.setTextColor(TFT_YELLOW); tft.setTextFont(6);
+    tft.print(dt);
+    tft.setCursor(200, 10, 1);
+    tft.println(" C.I. TARRAGONA");
+
+    // Set the font colour to be yellow with no background, set to font 7
+    tft.setTextColor(TFT_YELLOW);
+    tft.setTextFont(6);
 
 
 
-/*
+    /*
 
       tft.setCursor(10, 10,3);
       //tft.setTextFont(3);
@@ -553,7 +633,7 @@ void date_hora_guio() {
       xpos = xsecs;
 
       if (ss % 2) {                                             // Flash the colons on/off
-        tft.setTextColor(0x39C4, TFT_BLACK);                    // Set colour to grey to dim colon
+        tft.setTextColor(TFT_RED, TFT_BLACK);                   // Set colour to grey to dim colon
         tft.drawChar(':', xcolon, ypos - 8, lletra_gran);       // Hour:minute colon
         xpos += tft.drawChar(':', xsecs, ysecs, lletra_petit);  // Seconds colon
         tft.setTextColor(TFT_YELLOW, TFT_BLACK);                // Set colour back to yellow
@@ -563,7 +643,11 @@ void date_hora_guio() {
       }
 
       //Draw seconds
-      if (ss < 10) xpos += tft.drawChar('0', xpos, ysecs, lletra_petit);  // Add leading zero
+      if (ss < 10) xpos += tft.drawChar('0', xpos, ysecs, lletra_petit);     // Add leading zero
+      Serial.print("-->");
+      Serial.print(xpos);
+      Serial.print("<-->");
+      Serial.println(tft.drawChar('0', xpos, ysecs, lletra_petit));
       tft.drawNumber(ss, xpos, ysecs, lletra_petit);                      // Draw seconds
     }
   }
