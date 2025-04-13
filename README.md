@@ -32,4 +32,6 @@ https://www.tempmail.us.com/es/hover/encantador-resaltado-de-fila-de-tabla-con-c
 
    https://javl.github.io/image2cpp/
 
+   https://mischianti.org/images-to-byte-array-online-converter-cpp-arduino/
+
 https://espressif.github.io/arduino-esp32/package_esp32_dev_index.json,https://espressif.github.io/arduino-esp32/package_esp32_index.json,https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
