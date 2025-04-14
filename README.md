@@ -22,6 +22,10 @@ https://community.platformio.org/t/how-to-use-jtag-built-in-debugger-of-the-esp3
 
 https://javl.github.io/image2cpp/
 
+https://mischianti.org/images-to-byte-array-online-converter-cpp-arduino/
+
+![image](https://github.com/user-attachments/assets/f3b7dc4e-2405-4504-bd81-8fd9c0f84e7c)
+
 
 https://www.tempmail.us.com/es/hover/encantador-resaltado-de-fila-de-tabla-con-css-al-pasar-el-cursor
 
