@@ -6,6 +6,10 @@
 #include <TFT_eSPI.h>
 #include "repsol.h"
 #include "logo.h"
+//#include "logo_NTP.h"
+#include "Alert.h"
+#include "logo_REPSOL1.h"
+#include "github1.h"
 
 #include "Free_Fonts.h"  // Include the header file attached to this sketch
 #include <TimeLib.h>
@@ -13,13 +17,15 @@
 #include "time.h"
 #include <Wire.h>  // Comunicación I2C
 
-const char *ssid = "MOVISTAR-WIFI6-6810";
-const char *password = "N9HEPszqVUT93Js79xqs";
+
 
 const char *ntpServer = "ntp.lonelybinary.com";
 const long gmtOffset_sec = 3600L * 1;
 const int daylightOffset_sec = 1;
-
+//const char *com_lleiguir_NTP = "WIFI";
+const char *com_lleiguir_NTP = "I2C";
+const char *ssid = "MI-9";
+const char *password = "viscaTarracoII";
 
 struct tm timeinfo;
 
@@ -71,7 +77,10 @@ TFT_eSPI tft = TFT_eSPI();
 //TFT_eSprite win_mensaje = TFT_eSprite(&tft);
 TFT_eSprite win_reloj = TFT_eSprite(&tft);
 TFT_eSprite logo = TFT_eSprite(&tft);
+TFT_eSprite logo_REPSOLpetit = TFT_eSprite(&tft);
 TFT_eSprite win_total = TFT_eSprite(&tft);
+
+
 // parametros de la pantalla
 int off_orig_x = 0;    //  valor negativo x a restar por si la esquina origen no coincide con el hueco de la pantalla
 int off_orig_y = 0;    //  valor negativo y a restar por si la esquina origen no coincide con el hueco de la pantalla
@@ -96,16 +105,15 @@ char tm[16];
 char sm[16];
 
 int data = 0;
-long temps_out=0;
-
-
+long temps_out = 0;
+int angle = 10;
+bool veure_h_m=false;
 bool horari_estiu = false;   //he contat una hora mes al horario estiu? true=si
 bool horari_hivern = false;  //he tret una hora menys al horario hivern? true=si
 
 bool es_horari_seguent = false;
 
 void setup() {
-
   // INICIALIZAR DE ENTRADAS DIGITALES
   pinMode(PIN_IN_1, INPUT);
   pinMode(PIN_IN_2, INPUT);
@@ -114,47 +122,41 @@ void setup() {
   pinMode(PIN_IN_5, INPUT);
   pinMode(PIN_IN_6, INPUT);
 
+  // inicialitza la pantalla
+  tft.init();
+  tft.setRotation(3);
+  tft.fillScreen(TFT_BLACK);
+  tft.setSwapBytes(true);
+ // tft.pushImage(40, 100, 64, 64, logo_NTP);
+  tft.pushImage(110, 40, 110, 80, repsol);
+  tft.pushImage(150, 160, 43, 40, github1);
+  tft.setCursor(50, 190);
+  tft.setTextColor(TFT_WHITE, TFT_BLACK);
+  tft.setFreeFont(FSS12);
+  tft.print("#");
+  tft.print(DIRECCION_ESCLAVO);
+  tft.setCursor(50, 150);
+  tft.setTextColor(TFT_WHITE, TFT_BLACK);
+  tft.setFreeFont(FSS9);  // Select Free Serif 24 point font
+  tft.println("TALLER DE ELECTRONICA ");    // Print the font name onto the TFT screen
+  tft.setCursor(200, 190);
+  tft.setTextColor(TFT_YELLOW, TFT_BLACK);
+  tft.println("XavierTGN");
+  tft.setTextColor(TFT_WHITE, TFT_BLACK);
+
   // INICIALIZAR COMUNICACIÓN I2C
   Wire.onReceive(onReceive);
   Wire.begin((uint8_t)DIRECCION_ESCLAVO);
 
   Serial.begin(9600);
-
   setTime(03, 59, 40, 30, 3, 2025);  // 2h matinada 30 març, es hivern i que que restar 1 hora
 
-  const char *ssid = "MI-9";
-  const char *password = "viscaTarracoII";
+
 
   Serial.print("Connecting to WiFi network ");
-  WiFi.begin(ssid, password);
-  temps_out=millis()+5000;
-  while ((WiFi.status() != WL_CONNECTED) && (temps_out>=millis())){
-    delay(500);
-    Serial.print(".");
-  }
-  if (WL_CONNECTED != 3){
-    setTime(03, 3, 33, 30, 3, 2025);  // 2h matinada 30 març, es hivern i que que restar 1 hora
-  }else{
-    Serial.println("conectat");
-    sincro_NTP();
-  }
 
-  /*
-        Sync time with NTP server and update ESP32 RTC
-        getLocalTime() return false if time is not set
-    */
-
-  Serial.println("");
-
-  // disconnect WiFi
-  WiFi.disconnect(true);
-  WiFi.mode(WIFI_OFF);
-
-  //struct tm timeinfo;
-  getLocalTime(&timeinfo);
-  Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
-  //setTime(00, 59, 40, 30, 3, 2025);
-  setTime(timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec, timeinfo.tm_mday, timeinfo.tm_mon + 1, timeinfo.tm_year + 1900);
+  sincro_NTP();
+/*
   Serial.print("timeinfo.tm_hour--->");
   Serial.println(timeinfo.tm_hour);
   Serial.print("timeinfo.tm_min--->");
@@ -165,7 +167,7 @@ void setup() {
   Serial.println(timeinfo.tm_mon + 1);
   Serial.print("timeinfo.tm_year--->");
   Serial.println(timeinfo.tm_year + 1900);
-
+*/
   sprintf(dt, "%02d/%02d/%02d", day(), month(), year());
   sprintf(tm, "%02d:%02d:%02d", hour(), minute(), second());
   sprintf(sm, "%02d", second());
@@ -175,38 +177,7 @@ void setup() {
   Serial.println(dt);
   Serial.print("tm--->");
   Serial.println(tm);
-  /*
-  Serial.print("Day()--->");
-  Serial.println(day());
-  Serial.print("month()--->");
-  Serial.println(month());
-  Serial.print("year()--->");
-  Serial.println(year());
   
-*/
-  //Grids();
-  ////////////////////////carregar_hora();
-
-  //time_t t = now(); // Store the current time in time
-  targetTime = millis() + 1000;
-  tft.init();
-  tft.setRotation(3);
-
-  tft.fillScreen(TFT_BLACK);
-  /*
-  //crear ventana logo
-  logo.setColorDepth(16);
-  logo.setSwapBytes(true);
-  logo.createSprite(110, 80);
-  logo.setTextWrap(true);
-  //logo.setCursor(0, 0);
-  //logo.setTextFont(4);
-  //logo.fillScreen(TFT_TRANSPARENT);
-  //logo.print("logo logo sunt in culpa qui officia deserunt mollit anim id est laborum");
-  logo.pushSprite(190, 0);
-  logo.pushImage(0, 0, 110, 80, repsol);
-  //Bit_repsol.pushToSprite(&logo,10,0,TFT_BLACK);
-*/
   //crear ventana total
   win_total.createSprite(340, 240);
   win_total.setSwapBytes(true);
@@ -215,7 +186,6 @@ void setup() {
   win_total.setCursor(0, 0);
   //win_total.print("ACCESO  CONCEDIDO");
   win_total.pushSprite(0, 0);
-  //////////////////////win_total.pushToSprite(&logo,100,10,TFT_BLACK);
 
   // crear ventana reloj
   win_reloj.createSprite(320, 240);
@@ -223,15 +193,10 @@ void setup() {
   win_reloj.fillSprite(TFT_OLIVE);
   win_reloj.setCursor(0, 0);
   win_reloj.pushSprite(0, 0);
-  ////////win_reloj.pushToSprite(&logo,100,10,TFT_BLACK);
-  ///////////logo.pushImage(0, 0, 110, 80, repsol);
   win_reloj.createSprite(320, 240);
   tft.setSwapBytes(true);
-  ////////////////////////////tft.pushImage(200, 0, 110, 80, repsol);
-  /////////////////////////////tft.pushImage(150, 0, 87, 60, logo_REPSOL);
-  //////////////delay(2000);
-  //////////////Grids();
-    targetTime = millis() + 1000;
+  targetTime = millis() + 1000;
+  capcalera();
 }
 
 void loop(void) {
@@ -240,81 +205,128 @@ void loop(void) {
   opcions_teclat();
   //date_hora_guio();
   //Date_hora();
+  //carregar_hora();
   rellotge();
+  toca_actualizar();
 }
-void sincro_NTP(){
-  Serial.print("Syncing time with NTP server ");
+void toca_actualizar(){
+  if (hh==20 && mm==55 && ss==10){
+      sincro_NTP();
+  }
 
-  
-  temps_out=millis()+5000;
-  while ((!getLocalTime(&timeinfo))  && (temps_out>=millis())) {
+}
+void barra() {
+
+  tft.fillRect(50, 130, angle, 35, TFT_ORANGE);
+  angle = angle + 10;
+}
+void capcalera() {
+  // començar a la linea y 30, del 0 al 30 no es veu
+  tft.pushImage(254, 110, 60, 41, logo_REPSOL1);
+
+  //tft.pushImage(random(tft.width() - alertWidth), random(tft.height() - alertHeight), alertWidth, alertHeight, alert);
+  // tft.pushImage(random(tft.width() - alertWidth), random(tft.height() - alertHeight), alertWidth, alertHeight, logo_NTP);
+
+  tft.setCursor(200, 37, 2);
+  tft.println(" C.I.  TARRAGONA");
+
+  tft.drawRect(1, 31, 319, 28, TFT_RED);
+  tft.drawRect(2, 32, 318, 26, TFT_RED);
+
+  //tft.fillRect(0, 0, 319, 24,TFT_GREEN);
+  tft.drawRect(1, 60, 319, 100, TFT_ORANGE);
+  tft.drawRect(2, 61, 317, 98, TFT_ORANGE);
+
+  tft.drawRect(1, 161, 319, 40, TFT_ORANGE);
+  tft.drawRect(2, 162, 316, 38, TFT_ORANGE);
+}
+void sincro_NTP() {
+  horari_estiu = false;
+  horari_hivern = false;
+  WiFi.begin(ssid, password);
+  temps_out = millis() + 5000;
+  struct tm timeinfo;
+  while ((WiFi.status() != WL_CONNECTED) && (temps_out >= millis())) {
+    delay(400);
+    Serial.print(".");
+  }
+  Serial.print("Syncing time with NTP server ");
+  while (!getLocalTime(&timeinfo)) {
     configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
     delay(500);
     Serial.print("-");
   }
+  //delay(1000);
+  //carregar_hora();
+  // disconnect WiFi
+  WiFi.disconnect(true);
+  WiFi.mode(WIFI_OFF);
+    //struct tm timeinfo;
+  getLocalTime(&timeinfo);
+  Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
+  //setTime(00, 59, 40, 30, 3, 2025);
+  setTime(timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec, timeinfo.tm_mday, timeinfo.tm_mon + 1, timeinfo.tm_year + 1900);
+  carregar_hora();
+  tft.setCursor(20, 170 ,1);
+  tft.println(tm);
+  tft.setCursor(80, 170 ,1);
+  tft.println("UTC -ActualizaciOn hora OK");
 
+void pepe(){
+  //setTime(timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec, timeinfo.tm_mday, timeinfo.tm_mon + 1, timeinfo.tm_year + 1900);
+  Serial.println(timeinfo.tm_hour);
+  Serial.println(timeinfo.tm_min);
+  Serial.println(timeinfo.tm_sec);
+  Serial.println("--------------------------------");
 }
-void rellotge(){
-  hh=hour();
-  mm=minute();
-  ss=second();
- if (targetTime < millis()) {
+void rellotge() {
+  hh = hour();
+  mm = minute();
+  ss = second();
+  if (targetTime < millis()) {
     // Set next update for 1 second later
     targetTime = millis() + 1000;
-    /*
-    // Adjust the time values by adding 1 second
-    ss++;              // Advance second
-    if (ss == 60) {    // Check for roll-over
-      ss = 0;          // Reset seconds to zero
-      omm = mm;        // Save last minute time for display update
-      mm++;            // Advance minute
-      if (mm > 59) {   // Check for roll-over
-        mm = 0;
-        hh++;          // Advance hour
-        if (hh > 23) { // Check for 24hr roll-over (could roll-over on 13)
-          hh = 0;      // 0 for 24 hour clock, set to 1 for 12 hour clock
-        }
-      }
-    }
-    */
-
     // Update digital time
-    int xpos = 0;
-    int ypos = 85; // Top left corner ot clock text, about half way down
-    int ysecs = ypos + 24;
+    int xpos = 5;
+    int ypos = 72;  // Top left corner ot clock text, about half way down
+    int ysecs = ypos + 1;
 
-    if (omm != mm) { // Redraw hours and minutes time every minute
+    tft.setCursor(4, 37, 2);
+    tft.print(dt);
+
+    if ((omm != mm) || (veure_h_m==true)) {  // Redraw hours and minutes time every minute
+      // Carregar la hora aqui, aixees fa cada minut i no es sobrecarrega el loop
+      veure_h_m=false;
+      carregar_hora();
       omm = mm;
       // Draw hours and minutes
-      if (hh < 10) xpos += tft.drawChar('0', xpos, ypos, lletra_gran); // Add hours leading zero for 24 hr clock
-      xpos += tft.drawNumber(hh, xpos, ypos, lletra_gran);             // Draw hours
-      xcolon = xpos; // Save colon coord for later to flash on/off later
-      xpos += tft.drawChar(':', xpos, ypos - 8,lletra_gran);
-      if (mm < 10) xpos += tft.drawChar('0', xpos, ypos, lletra_gran); // Add minutes leading zero
-      xpos += tft.drawNumber(mm, xpos, ypos, lletra_gran);             // Draw minutes
-      xsecs = xpos; // Sae seconds 'x' position for later display updates
+      if (hh < 10) xpos += tft.drawChar('0', xpos, ypos, lletra_gran);  // Add hours leading zero for 24 hr clock
+      xpos += tft.drawNumber(hh, xpos, ypos, lletra_gran);              // Draw hours
+      xcolon = xpos;                                                    // Save colon coord for later to flash on/off later
+      xpos += tft.drawChar(':', xpos, ypos - 8, lletra_gran);
+      if (mm < 10) xpos += tft.drawChar('0', xpos, ypos, lletra_gran);  // Add minutes leading zero
+      xpos += tft.drawNumber(mm, xpos, ypos, lletra_gran);              // Draw minutes
+      xsecs = xpos;                                                     // Sae seconds 'x' position for later display updates
     }
-    if (oss != ss) { // Redraw seconds time every second
+    if (oss != ss) {  // Redraw seconds time every second
       oss = ss;
       xpos = xsecs;
 
-      if (ss % 2) { // Flash the colons on/off
-        tft.setTextColor(0x39C4, TFT_BLACK);        // Set colour to grey to dim colon
-        tft.drawChar(':', xcolon, ypos - 8, lletra_gran);     // Hour:minute colon
-        xpos += tft.drawChar(':', xsecs, ysecs, 6); // Seconds colon
-        tft.setTextColor(TFT_YELLOW, TFT_BLACK);    // Set colour back to yellow
-      }
-      else {
-        tft.drawChar(':', xcolon, ypos - 8, lletra_gran);     // Hour:minute colon
-        xpos += tft.drawChar(':', xsecs, ysecs, 6); // Seconds colon
+      if (ss % 2) {                                             // Flash the colons on/off
+        tft.setTextColor(TFT_RED, TFT_BLACK);                   // Set colour to grey to dim colon
+        tft.drawChar(':', xcolon, ypos - 8, lletra_gran);       // Hour:minute colon
+        xpos += tft.drawChar(':', xsecs, ysecs, lletra_petit);  // Seconds colon
+        tft.setTextColor(TFT_YELLOW, TFT_BLACK);                // Set colour back to yellow
+      } else {
+        tft.drawChar(':', xcolon, ypos - 8, lletra_gran);       // Hour:minute colon
+        xpos += tft.drawChar(':', xsecs, ysecs, lletra_petit);  // Seconds colon
       }
 
       //Draw seconds
-      if (ss < 10) xpos += tft.drawChar('0', xpos, ysecs,lletra_petit); // Add leading zero
-      tft.drawNumber(ss, xpos, ysecs, lletra_petit);                     // Draw seconds
+      if (ss < 10) xpos += tft.drawChar('0', xpos, ysecs, lletra_petit);  // Add leading zero
+      tft.drawNumber(ss, xpos, ysecs, lletra_petit);                      // Draw seconds
     }
   }
-
 }
 //win_reloj.fillSprite(0);
 void llegir_DI() {
@@ -369,7 +381,7 @@ void Date_hora() {
   win_reloj.fillSprite(0);
 }
 void mensaje(String text_1, String text_2, int col_fons, int col_lletra) {
-  win_total.setCursor(10, 10);
+  win_total.setCursor(40, 40);
   win_total.pushSprite(0, 0);
   win_total.fillSprite(col_fons);
   win_total.setTextColor(col_lletra, col_fons);
@@ -382,13 +394,11 @@ void mensaje(String text_1, String text_2, int col_fons, int col_lletra) {
   win_total.setFreeFont(FF19);  // Select Free Serif 24 point font
   win_total.println(text_2);    // Print the font name onto the TFT screen
   win_total.pushSprite(0, 0);
-  delay(2000);
-  //tft.init();
-  tft.setRotation(3);
-
+  delay(1500);
+  //tft.setRotation(3);
   tft.fillScreen(TFT_BLACK);
-
-  //win_total.fillSprite(TFT_BLACK);
+  veure_h_m=true;
+  capcalera();
 }
 // FUNCIÓN RECIBIR DATOS I2C
 void onReceive(int len) {
@@ -472,7 +482,6 @@ void carregar_hora() {
     }
   }
 }
-
 void Grids() {
   //SMALLEST_TOP bars_left
   // Draw tick -12th degree
@@ -494,7 +503,14 @@ void opcions_teclat() {
   if (Serial.available() > 0) {
     data = Serial.read();
     Serial.println(data, DEC);
-
+    if (data == 'V') {
+      pepe();
+      delay(200);
+    }
+    if (data == 'S') {
+      sincro_NTP();
+      delay(200);
+    }
     if (data == 'A') {
       setTime(00, 59, 40, 30, 3, 2025);  // 2h matinada 30 març, es hivern i que que restar 1 hora
       //time_t t=now();
@@ -537,11 +553,9 @@ void opcions_teclat() {
     }
     if (data == 'M') {
       mensaje("    ACCESO", "    PERMITIDO", TFT_GREEN, TFT_BLACK);
-      delay(2000);
-      win_total.fillSprite(TFT_BLACK);
+    }
+    if (data == 'K') {
       mensaje("    ACCESO", "    DENEGADO", TFT_RED, TFT_WHITE);
-      delay(2000);
-      win_total.fillSprite(TFT_WHITE);
     }
     DEBUG((char)data);
   }
@@ -551,25 +565,8 @@ void date_hora_guio() {
   if (targetTime < millis()) {
     carregar_hora();
 
-    //txtSprite.pushToSprite(&background,2,3);
-    //txtSprite.drawString(String(ss),0,0,6);
-    //tft.setTextFont(1);
-    /*
-    for (int i = 0; i <= 255; i++) {
-      tft.drawNumber(i, i, 200, 6);
-      delay(80);
-    }*/
-    //tft.setFreeFont(FSB18);                              // Select the font
-    //tft.drawString("Serif Bold 9pt", 10, 10, 8);  // Draw the text string in the selected GFX free font
-    //background.pushSprite(0,0);
-    //tft.drawNumber(6666,200,10,6);
-    //tft.setTextSize(1);
-
-
     // Set next update for 1 second later
     targetTime = millis() + 1000;
-    ////////////////////carregar_hora();
-
 
     tft.setCursor(10, 10, 2);
     // Set the font colour to be white with a black background, set text size multiplier to 1
@@ -587,25 +584,6 @@ void date_hora_guio() {
     // Set the font colour to be yellow with no background, set to font 7
     tft.setTextColor(TFT_YELLOW);
     tft.setTextFont(6);
-
-
-
-    /*
-
-      tft.setCursor(10, 10,3);
-      //tft.setTextFont(3);
-      tft.setTextSize(1);
-      // Draw hours and minutes
-      tft.setTextColor(TFT_RED, TFT_BLACK);  
-      tft.drawChar('REPSOL:', 10, 10, lletra_petit); 
-      tft.println("Hello World!");
-*/
-
-    //tft.setCursor(0, 0);
-    //tft.setTextColor(ILI9341_WHITE);
-    ////background.pushSprite(0, 0);
-    ////RepsolSprite.pushImage(0, 0, 110, 80, repsol);
-    ////RepsolSprite.pushToSprite(&background, 100, 0, TFT_BLACK);
 
     // Update digital time
     int xpos = 0;
@@ -643,12 +621,12 @@ void date_hora_guio() {
       }
 
       //Draw seconds
-      if (ss < 10) xpos += tft.drawChar('0', xpos, ysecs, lletra_petit);     // Add leading zero
+      if (ss < 10) xpos += tft.drawChar('0', xpos, ysecs, lletra_petit);  // Add leading zero
       Serial.print("-->");
       Serial.print(xpos);
       Serial.print("<-->");
       Serial.println(tft.drawChar('0', xpos, ysecs, lletra_petit));
-      tft.drawNumber(ss, xpos, ysecs, lletra_petit);                      // Draw seconds
+      tft.drawNumber(ss, xpos, ysecs, lletra_petit);  // Draw seconds
     }
   }
 }
