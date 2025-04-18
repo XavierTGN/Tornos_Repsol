@@ -42,6 +42,7 @@ https://espressif.github.io/arduino-esp32/package_esp32_dev_index.json,https://e
 
 Dades del la LiLyGo Lite esp32 T-ETH  Ethernet:
 Station MAC:   64:E8:33:47:0A:24
+
 SoftAP MAC:    66:E8:33:47:0A:24
 Bluetooth MAC: 64:E8:33:47:0A:25
 Ethernet MAC:  66:E8:33:47:0A:25
