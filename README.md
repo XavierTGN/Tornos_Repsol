@@ -46,3 +46,6 @@ Station MAC:   64:E8:33:47:0A:24
 SoftAP MAC:    66:E8:33:47:0A:24
 Bluetooth MAC: 64:E8:33:47:0A:25
 Ethernet MAC:  66:E8:33:47:0A:25
+
+Informacio sobre el esp32s3LilyGo Lite
+https://github.com/Xinyuan-LilyGO/LilyGO-T-ETH-Series/tree/master
