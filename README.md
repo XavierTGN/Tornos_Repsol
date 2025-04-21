@@ -49,3 +49,8 @@ Ethernet MAC:  66:E8:33:47:0A:25
 
 Informacio sobre el esp32s3LilyGo Lite
 https://github.com/Xinyuan-LilyGO/LilyGO-T-ETH-Series/tree/master
+
+ <p align="left" width="100" height="100">
+   <image src="https://github.com/user-attachments/assets/a8ab2b0b-f97c-490a-87f8-a10f307a48b4">
+</p>
+
