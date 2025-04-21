@@ -50,14 +50,12 @@ Ethernet MAC:  66:E8:33:47:0A:25
 Informacio sobre el esp32s3LilyGo Lite
 https://github.com/Xinyuan-LilyGO/LilyGO-T-ETH-Series/tree/master
 
-https://github.com/user-attachments/assets/a8ab2b0b-f97c-490a-87f8-a10f307a48b4
-
-
-
+Configuracio del IDE Arduino, per ESP32S3 liLyGo Lite:
    <p align="left" width="110px">
-   <image src="https://github.com/user-attachments/assets/a8ab2b0b-f97c-490a-87f8-a10f307a48b4" alt="ESP32S3" width="600" height="700">
+   <image src="https://github.com/user-attachments/assets/a8ab2b0b-f97c-490a-87f8-a10f307a48b4" alt="ESP32S3" width="700" height="500">
    <p align="left">
 
+Diagram ESP32S3-LiLyGo Lite.
    <p align="left" width="110px">
    <image src="https://github.com/user-attachments/assets/66b8365d-7e4c-48a4-908e-f8c7d9a07025" alt="ESP32S3" width="400" height="500">
    <p align="left">
