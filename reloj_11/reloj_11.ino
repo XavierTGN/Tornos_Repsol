@@ -23,7 +23,7 @@ const char *ntpServer = "ntp.lonelybinary.com";
 const long gmtOffset_sec = 3600L * 1;
 const int daylightOffset_sec = 1;
 //const char *com_lleiguir_NTP = "WIFI";
-const char *com_lleiguir_NTP = "I2C";
+//const char *com_lleiguir_NTP = "I2C";
 const char *ssid = "MI-9";
 const char *password = "viscaTarracoII";
 
@@ -145,7 +145,7 @@ void setup() {
   tft.setTextColor(TFT_WHITE, TFT_BLACK);
 
   // INICIALIZAR COMUNICACIÓN I2C
-  Wire.onReceive(onReceive);
+  Wire.onReceive(rebre_del_master);
   Wire.begin((uint8_t)DIRECCION_ESCLAVO);
 
   Serial.begin(9600);
@@ -271,13 +271,16 @@ void sincro_NTP() {
   tft.println(tm);
   tft.setCursor(80, 170 ,1);
   tft.println("UTC -ActualizaciOn hora OK");
-
+}
 void pepe(){
+  /*
   //setTime(timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec, timeinfo.tm_mday, timeinfo.tm_mon + 1, timeinfo.tm_year + 1900);
   Serial.println(timeinfo.tm_hour);
   Serial.println(timeinfo.tm_min);
   Serial.println(timeinfo.tm_sec);
+  Serial.println(tm, "%A, %B %d %Y %H:%M:%S");
   Serial.println("--------------------------------");
+  */
 }
 void rellotge() {
   hh = hour();
@@ -401,7 +404,7 @@ void mensaje(String text_1, String text_2, int col_fons, int col_lletra) {
   capcalera();
 }
 // FUNCIÓN RECIBIR DATOS I2C
-void onReceive(int len) {
+void rebre_del_master(int len) {
   horaActRec = Wire.read();
   wireAvailable = Wire.available();
   minutosActRec = Wire.read();
@@ -426,6 +429,7 @@ void onReceive(int len) {
   Serial.println(anoActRec);
   Serial.println("------------------");
 }
+
 void carregar_hora() {
   hh = hour();
   mm = minute();
@@ -650,15 +654,15 @@ bool isDst(int dia, int mes, int dia_semana, int hora) {
   if (domingo_anterior < 25) { return true; }
   if (domingo_anterior >= 25 && dia_semana == 1) { return hora < 3; }
   return false;
+
+  // Hora Central Europea
+  // De CET a CEST:
+  //    último domingo de marzo a las 02:00 hora local -> 03:00
+  // De CEST a CET:
+  //    último domingo de octubre a las 03:00 hora local -> 02:00
+  //
+  // día    1 .. 31
+  // mes  1 .. 12
+  // dia_semana    1 .. 7   (día de la semana, 1=domingo)
+  // hora   0 .. 23 hora local
 }
-// Hora Central Europea
-// De CET a CEST:
-//    último domingo de marzo a las 02:00 hora local -> 03:00
-// De CEST a CET:
-//    último domingo de octubre a las 03:00 hora local -> 02:00
-//
-// día    1 .. 31
-// mes  1 .. 12
-// dia_semana    1 .. 7   (día de la semana, 1=domingo)
-// hora   0 .. 23 hora local
-//
