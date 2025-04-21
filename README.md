@@ -54,3 +54,8 @@ https://github.com/Xinyuan-LilyGO/LilyGO-T-ETH-Series/tree/master
    <image src="https://github.com/user-attachments/assets/a8ab2b0b-f97c-490a-87f8-a10f307a48b4">
 </p>
 
+ <p align="left" width="100" height="100">
+   <image src="[https://github.com/user-attachments/assets/a8ab2b0b-f97c-490a-87f8-a10f307a48b4](https://github.com/user-attachments/assets/66b8365d-7e4c-48a4-908e-f8c7d9a07025)">
+</p>
+
+
