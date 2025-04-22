@@ -61,4 +61,14 @@ Diagram ESP32S3-LiLyGo Lite.
    <p align="left">
 
 
+**Direcciones de red para pruebas en taller de Repsol:**  
+Maxter_1--->10.82.103.215  <<-->> 10.82.108.220  
+Mask : 255.255.255.240  
+Gateway: 10.82.103.209  
+
+Servidor NTP: 172.24.147.1  
+
+Direcciones para instalación en puerta:  
+*-Master_1, el de entrando a la derecha----10.82.207.13  
+*-Master_2, el de discapacitados  ---------10.82.207.14  
 
