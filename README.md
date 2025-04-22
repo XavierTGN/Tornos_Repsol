@@ -41,11 +41,17 @@ https://www.tempmail.us.com/es/hover/encantador-resaltado-de-fila-de-tabla-con-c
 https://espressif.github.io/arduino-esp32/package_esp32_dev_index.json,https://espressif.github.io/arduino-esp32/package_esp32_index.json,https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
 
 Dades del la LiLyGo Lite esp32 T-ETH  Ethernet:
+   * Torno , entrando a mano derecha  
+Station MAC:   64:E8:33:47:0A:24  
+SoftAP MAC:    66:E8:33:47:0A:24  
+Bluetooth MAC: 64:E8:33:47:0A:25  
+Ethernet MAC:  66:E8:33:47:0A:25  
 
-Station MAC:   64:E8:33:47:0A:24
-SoftAP MAC:    66:E8:33:47:0A:24
-Bluetooth MAC: 64:E8:33:47:0A:25
-Ethernet MAC:  66:E8:33:47:0A:25
+   * Tornos minusvalidos  
+Station MAC:   F0:F5:BD:4B:EA:08  
+SoftAP MAC:    F2:F5:BD:4B:EA:08  
+Bluetooth MAC: F0:F5:BD:4B:EA:09  
+Ethernet MAC:  F2:F5:BD:4B:EA:09  
 
 Informacio sobre el esp32s3LilyGo Lite
 https://github.com/Xinyuan-LilyGO/LilyGO-T-ETH-Series/tree/master
