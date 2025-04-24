@@ -6,7 +6,9 @@
  * @date      2023-02-17
  *
  */
+#include <TimeLib.h>
 #include <Arduino.h>
+#include <stdio.h>
 #if ESP_ARDUINO_VERSION < ESP_ARDUINO_VERSION_VAL(3, 0, 0)
 #include "ETHClass2.h"  //Is to use the modified ETHClass
 #define ETH ETH2
@@ -14,7 +16,7 @@
 #include <ETH.h>
 #endif
 #include <SPI.h>
-#include <SD.h>
+//#include <SD.h>
 #include "utilities.h"  //Board PinMap
 #include <WiFi.h>
 #include <NTPClient.h>
@@ -26,12 +28,27 @@ const char *password = "viscaTarracoII";
 const char *ntpServer = "ntp.lonelybinary.com";
 const long gmtOffset_sec = 0;//3600L * 1;
 const int daylightOffset_sec = 0;
+struct tm timeinfo;
 
+char dt[16];
+char tm[16];
+char sm[16];
+bool is_Wifi=true;
+//bool is_Wifi=false;
+
+/*
 //Change to IP and DNS corresponding to your network, gateway
 IPAddress staticIP(10, 82, 103, 215);
 IPAddress gateway(10, 82, 103, 209);
 IPAddress subnet(255, 255, 255, 240);
 IPAddress dns(172, 16, 138, 119);
+*/
+IPAddress staticIP(192,168,1,10);
+IPAddress gateway(192, 168, 1, 1);
+IPAddress subnet(255, 255, 255, 0);
+// la dns , si no es correcte no te access a internet i no es pot accedir al servidor ntp
+// dns de casa -->80.58.61.250
+IPAddress dns(80, 58, 61, 250);
 
 WiFiUDP ntpUDP;
 //NTPClient timeClient(ntpUDP, "172.24.147.1", 3600, 60000);
@@ -66,8 +83,10 @@ void setup() {
   if (ETH.config(staticIP, gateway, subnet, dns, dns) == false) {
     Serial.println("Configuration failed.");
   }
-  timeClient.begin();
+
+/*
   //***************************************************
+  if (is_Wifi==true){
     Serial.print ("Connecting to WiFi network ");
     WiFi.mode(WIFI_STA);
     WiFi.begin(ssid, password);
@@ -77,17 +96,24 @@ void setup() {
         Serial.print(".");
     }
     Serial.println("");
+    //ETH.end();
+  }
   //***************************************************
+  */
+  timeClient.begin();
+  delay(2000);
+  timeClient.update();
 }
 
 void loop() {
-  timeClient.update();
+  unsigned long t_unix_date1;
+  //timeClient.update();
   Serial.println(timeClient.getFormattedTime());
-
-  //////if (eth_connected) {
-  //////    testClient("172.24.147.1", 80);
-  //////}
-  delay(10000);
+  Serial.print(t_unix_date1);
+  t_unix_date1=timeClient.getEpochTime();
+  sprintf(tm,"Date1: %4d-%02d-%02d %02d:%02d:%02d\n", year(t_unix_date1), month(t_unix_date1), day(t_unix_date1), hour(t_unix_date1), minute(t_unix_date1), second(t_unix_date1));
+  Serial.println(tm);
+  delay(2000);
 }
 
 void testClient(const char *host, uint16_t port) {
