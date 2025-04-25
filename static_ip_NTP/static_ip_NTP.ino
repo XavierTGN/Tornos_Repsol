@@ -6,6 +6,20 @@
  * @date      2023-02-17
  *
  */
+/*
+ Definits a utilities.h
+#define ETH_TYPE                        ETH_PHY_RTL8201
+#define ETH_ADDR                        0
+#define ETH_CLK_MODE                    ETH_CLOCK_GPIO0_IN
+#define ETH_RESET_PIN                   -1
+#define ETH_MDC_PIN                     23
+#define ETH_POWER_PIN                   12
+#define ETH_MDIO_PIN                    18
+#define SD_MISO_PIN                     34
+#define SD_MOSI_PIN                     13
+#define SD_SCLK_PIN                     14
+#define SD_CS_PIN                       5
+*/
 #include <TimeLib.h>
 #include <Arduino.h>
 #include <stdio.h>
@@ -26,15 +40,15 @@ const char *ssid = "MI-9";
 const char *password = "viscaTarracoII";
 
 const char *ntpServer = "ntp.lonelybinary.com";
-const long gmtOffset_sec = 0;//3600L * 1;
+const long gmtOffset_sec = 0;  //3600L * 1;
 const int daylightOffset_sec = 0;
 struct tm timeinfo;
 
 char dt[16];
 char tm[16];
 char sm[16];
-bool is_Wifi=true;
-//bool is_Wifi=false;
+//bool is_Wifi = true;
+bool is_Wifi=false;
 
 /*
 //Change to IP and DNS corresponding to your network, gateway
@@ -43,7 +57,7 @@ IPAddress gateway(10, 82, 103, 209);
 IPAddress subnet(255, 255, 255, 240);
 IPAddress dns(172, 16, 138, 119);
 */
-IPAddress staticIP(192,168,1,10);
+IPAddress staticIP(192, 168, 1, 10);
 IPAddress gateway(192, 168, 1, 1);
 IPAddress subnet(255, 255, 255, 0);
 // la dns , si no es correcte no te access a internet i no es pot accedir al servidor ntp
@@ -61,12 +75,14 @@ void setup() {
   Serial.begin(115200);
   WiFi.onEvent(WiFiEvent);
 
+  /*
 #ifdef ETH_POWER_PIN
   Serial.println("ETH_POWER_PIN");
   pinMode(ETH_POWER_PIN, OUTPUT);
   digitalWrite(ETH_POWER_PIN, HIGH);
 #endif
-
+*/
+/*
 #if CONFIG_IDF_TARGET_ESP32
   if (!ETH.begin(ETH_TYPE, ETH_ADDR, ETH_MDC_PIN,
                  ETH_MDIO_PIN, ETH_RESET_PIN, ETH_CLK_MODE)) {
@@ -80,63 +96,120 @@ void setup() {
   }
 #endif
 
-  if (ETH.config(staticIP, gateway, subnet, dns, dns) == false) {
-    Serial.println("Configuration failed.");
-  }
+*/
 
-/*
+
   //***************************************************
-  if (is_Wifi==true){
-    Serial.print ("Connecting to WiFi network ");
-    WiFi.mode(WIFI_STA);
-    WiFi.begin(ssid, password);
-    while (WiFi.status() != WL_CONNECTED)
-    {
-        delay(500);
-        Serial.print(".");
-    }
-    Serial.println("");
-    //ETH.end();
-  }
+  if (is_Wifi == true) {start_wifi();}
+  if (is_Wifi == false) {start_eth();}
+
   //***************************************************
-  */
+
   timeClient.begin();
   delay(2000);
   timeClient.update();
 }
 
+void start_wifi() {
+  Serial.print("Connecting to WiFi network ");
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("");
+  ETH.end();
+}
+void start_eth() {
+  ETH.config(staticIP, gateway, subnet, dns, dns);
+  ETH.begin(ETH_PHY_W5500, 1, ETH_CS_PIN, ETH_INT_PIN, ETH_RST_PIN,
+                 SPI3_HOST, ETH_SCLK_PIN, ETH_MISO_PIN, ETH_MOSI_PIN);
+  // no funciona Wifi.end();
+}
+
+
 void loop() {
+  char incomingByte;
   unsigned long t_unix_date1;
-  //timeClient.update();
-  Serial.println(timeClient.getFormattedTime());
-  Serial.print(t_unix_date1);
-  t_unix_date1=timeClient.getEpochTime();
-  sprintf(tm,"Date1: %4d-%02d-%02d %02d:%02d:%02d\n", year(t_unix_date1), month(t_unix_date1), day(t_unix_date1), hour(t_unix_date1), minute(t_unix_date1), second(t_unix_date1));
+  t_unix_date1 = timeClient.getEpochTime();
+  sprintf(tm, "Date1: %4d-%02d-%02d %02d:%02d:%02d\n", year(t_unix_date1), month(t_unix_date1), day(t_unix_date1), hour(t_unix_date1), minute(t_unix_date1), second(t_unix_date1));
   Serial.println(tm);
-  delay(2000);
+  delay(1000);
+  // send data only when you receive data:
+  if (Serial.available() > 0) {
+    // read the incoming byte:
+    incomingByte = Serial.read();
+    if (incomingByte=='A') {
+    Serial.print("Wifi");
+    start_wifi();
+    }
+    if (incomingByte=='E') {
+    Serial.print("Ethernet");
+    start_eth();
+    }
+    // say what you got:
+    Serial.print("I received: ");
+    Serial.println(incomingByte);
+  }
+
 }
 
-void testClient(const char *host, uint16_t port) {
-  Serial.print("\nconnecting to ");
-  Serial.println(host);
-
-  WiFiClient client;
-  if (!client.connect(host, port)) {
-    Serial.println("connection failed");
-    return;
-  }
-  client.printf("GET / HTTP/1.1\r\nHost: %s\r\n\r\n", host);
-  while (client.connected() && !client.available())
-    ;
-  while (client.available()) {
-    Serial.write(client.read());
-  }
-
-  Serial.println("closing connection\n");
-  client.stop();
-}
 void WiFiEvent(arduino_event_id_t event) {
+  //Serial.print("event: ");
+  //Serial.println(event);
   switch (event) {
+    case ARDUINO_EVENT_WIFI_READY: Serial.println("WiFi interface ready"); break;
+    case ARDUINO_EVENT_WIFI_SCAN_DONE: Serial.println("Completed scan for access points"); break;
+    case ARDUINO_EVENT_WIFI_STA_START: Serial.println("WiFi client started"); break;
+    case ARDUINO_EVENT_WIFI_STA_STOP: Serial.println("WiFi clients stopped"); break;
+    case ARDUINO_EVENT_WIFI_STA_CONNECTED: Serial.println("Connected to access point"); break;
+    case ARDUINO_EVENT_WIFI_STA_DISCONNECTED: Serial.println("Disconnected from WiFi access point"); break;
+    case ARDUINO_EVENT_WIFI_STA_AUTHMODE_CHANGE: Serial.println("Authentication mode of access point has changed"); break;
+    case ARDUINO_EVENT_WIFI_STA_GOT_IP:
+      Serial.print("Obtained IP address: ");
+      Serial.println(WiFi.localIP());
+      break;
+    case ARDUINO_EVENT_WIFI_STA_LOST_IP: Serial.println("Lost IP address and IP address is reset to 0"); break;
+    case ARDUINO_EVENT_WPS_ER_SUCCESS: Serial.println("WiFi Protected Setup (WPS): succeeded in enrollee mode"); break;
+    case ARDUINO_EVENT_WPS_ER_FAILED: Serial.println("WiFi Protected Setup (WPS): failed in enrollee mode"); break;
+    case ARDUINO_EVENT_WPS_ER_TIMEOUT: Serial.println("WiFi Protected Setup (WPS): timeout in enrollee mode"); break;
+    case ARDUINO_EVENT_WPS_ER_PIN: Serial.println("WiFi Protected Setup (WPS): pin code in enrollee mode"); break;
+    case ARDUINO_EVENT_WIFI_AP_START: Serial.println("WiFi access point started"); break;
+    case ARDUINO_EVENT_WIFI_AP_STOP: Serial.println("WiFi access point  stopped"); break;
+    case ARDUINO_EVENT_WIFI_AP_STACONNECTED: Serial.println("Client connected"); break;
+    case ARDUINO_EVENT_WIFI_AP_STADISCONNECTED: Serial.println("Client disconnected"); break;
+    case ARDUINO_EVENT_WIFI_AP_STAIPASSIGNED: Serial.println("Assigned IP address to client"); break;
+    case ARDUINO_EVENT_WIFI_AP_PROBEREQRECVED: Serial.println("Received probe request"); break;
+    case ARDUINO_EVENT_WIFI_AP_GOT_IP6: Serial.println("AP IPv6 is preferred"); break;
+    case ARDUINO_EVENT_WIFI_STA_GOT_IP6: Serial.println("STA IPv6 is preferred"); break;
+    case ARDUINO_EVENT_ETH_GOT_IP6: Serial.println("Ethernet IPv6 is preferred"); break;
+    case ARDUINO_EVENT_ETH_START: Serial.println("Ethernet started"); break;
+    case ARDUINO_EVENT_ETH_STOP: Serial.println("Ethernet stopped"); break;
+    case ARDUINO_EVENT_ETH_CONNECTED: Serial.println("Ethernet connected"); break;
+    case ARDUINO_EVENT_ETH_DISCONNECTED: Serial.println("Ethernet disconnected"); break;
+    case ARDUINO_EVENT_ETH_GOT_IP: Serial.println("Obtained IP address"); break;
+    default: break;
+  }
+  /*
+  switch (event) {
+// wifi
+    case ARDUINO_EVENT_ETH_START:
+      Serial.print("ETH Started");
+      //set eth hostname here
+      ETH.setHostname("esp32-ethernet");
+      break;
+    case ARDUINO_EVENT_ETH_START:
+      Serial.print("ETH Started");
+      //set eth hostname here
+      ETH.setHostname("esp32-ethernet");
+      break;
+    case ARDUINO_EVENT_ETH_START:
+      Serial.print("ETH Started");
+      //set eth hostname here
+      ETH.setHostname("esp32-ethernet");
+      break;
+
     case ARDUINO_EVENT_ETH_START:
       Serial.print("ETH Started");
       //set eth hostname here
@@ -170,4 +243,26 @@ void WiFiEvent(arduino_event_id_t event) {
     default:
       break;
   }
+  */
 }
+/*
+void testClient(const char *host, uint16_t port) {
+  Serial.print("\nconnecting to ");
+  Serial.println(host);
+
+  WiFiClient client;
+  if (!client.connect(host, port)) {
+    Serial.println("connection failed");
+    return;
+  }
+  client.printf("GET / HTTP/1.1\r\nHost: %s\r\n\r\n", host);
+  while (client.connected() && !client.available())
+    ;
+  while (client.available()) {
+    Serial.write(client.read());
+  }
+
+  Serial.println("closing connection\n");
+  client.stop();
+}
+*/

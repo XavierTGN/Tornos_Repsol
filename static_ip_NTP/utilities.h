@@ -76,6 +76,7 @@
 #define SD_SCLK_PIN                     14
 #define SD_CS_PIN                       5
 
+//******************************************************************
 #elif defined(LILYGO_T_ETH_LITE_ESP32S3)
 #define ETH_MISO_PIN                    11
 #define ETH_MOSI_PIN                    12
@@ -88,9 +89,9 @@
 #define SD_MOSI_PIN                     6
 #define SD_SCLK_PIN                     7
 #define SD_CS_PIN                       42
-
-
 #define IR_FILTER_NUM                   46
+//*****************************************************************
+
 #elif defined(LILYGO_T_ETH_ELITE_ESP32S3)
 
 #define ETH_MISO_PIN                     47
