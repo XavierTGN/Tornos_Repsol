@@ -82,3 +82,6 @@ Direcciones para instalación en puerta:
 *-Master_1, el de entrando a la derecha----10.82.207.13  
 *-Master_2, el de discapacitados  ---------10.82.207.14  
 
+DAtos "oficiales" del lylygo eth lite  
+https://github.com/Xinyuan-LilyGO/LilyGO-T-ETH-Series  
+
