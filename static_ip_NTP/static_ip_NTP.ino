@@ -35,11 +35,20 @@
 #include <WiFi.h>
 #include <NTPClient.h>
 #include "time.h"
+#include <WebServer.h>
 
-const char *ssid = "MI-9";
-const char *password = "viscaTarracoII";
+//const char *ssid = "MI-9";
+//const char *password = "viscaTarracoII";
 
-const char *ntpServer = "ntp.lonelybinary.com";
+//const char *ssid = "ELECTRONICA";
+//const char *password = "repsol01";
+
+const char *ssid = "MOVISTAR-WIFI6-6810";
+const char *password = "N9HEPszqVUT93Js79xqs";
+
+
+// Ntp Repsol
+const char *ntpServer_REPSOL = "150.214.94.10";
 const long gmtOffset_sec = 0;  //3600L * 1;
 const int daylightOffset_sec = 0;
 struct tm timeinfo;
@@ -47,17 +56,16 @@ struct tm timeinfo;
 char dt[16];
 char tm[16];
 char sm[16];
-//bool is_Wifi = true;
-bool is_Wifi=false;
 
-/*
-//Change to IP and DNS corresponding to your network, gateway
-IPAddress staticIP(10, 82, 103, 215);
-IPAddress gateway(10, 82, 103, 209);
-IPAddress subnet(255, 255, 255, 240);
-IPAddress dns(172, 16, 138, 119);
-*/
-IPAddress staticIP(192, 168, 1, 10);
+// WIFI Configuración de IP estática
+IPAddress wifiIP(192, 168, 1, 10);  // IP estática para Wi-Fi
+IPAddress wifiGateway(192, 168, 1, 1);
+IPAddress wifiSubnet(255, 255, 255, 0);
+IPAddress wifiprimaryDNS(8, 8, 8, 8);    // Opcional
+IPAddress wifisecondaryDNS(8, 8, 4, 4);  // Opcional
+
+// Ethernet configuracion de IP estatica
+IPAddress staticIP(192, 168, 1, 11);
 IPAddress gateway(192, 168, 1, 1);
 IPAddress subnet(255, 255, 255, 0);
 // la dns , si no es correcte no te access a internet i no es pot accedir al servidor ntp
@@ -65,71 +73,71 @@ IPAddress subnet(255, 255, 255, 0);
 IPAddress dns(80, 58, 61, 250);
 
 WiFiUDP ntpUDP;
-//NTPClient timeClient(ntpUDP, "172.24.147.1", 3600, 60000);
-NTPClient timeClient(ntpUDP, "hora.roa.es", 3600, 60000);
-
-static bool eth_connected = false;
-
-
+NTPClient timeClient(ntpUDP, ntpServer_REPSOL, 3600, 60000);
+// server
+WebServer server(80);
+String serialData = "";
 void setup() {
   Serial.begin(115200);
   WiFi.onEvent(WiFiEvent);
 
-  /*
-#ifdef ETH_POWER_PIN
-  Serial.println("ETH_POWER_PIN");
-  pinMode(ETH_POWER_PIN, OUTPUT);
-  digitalWrite(ETH_POWER_PIN, HIGH);
-#endif
-*/
-/*
-#if CONFIG_IDF_TARGET_ESP32
-  if (!ETH.begin(ETH_TYPE, ETH_ADDR, ETH_MDC_PIN,
-                 ETH_MDIO_PIN, ETH_RESET_PIN, ETH_CLK_MODE)) {
-    Serial.println("ETH start Failed!");
-  }
-#else
-  if (!ETH.begin(ETH_PHY_W5500, 1, ETH_CS_PIN, ETH_INT_PIN, ETH_RST_PIN,
-                 SPI3_HOST,
-                 ETH_SCLK_PIN, ETH_MISO_PIN, ETH_MOSI_PIN)) {
-    Serial.println("ETH start Failed!");
-  }
-#endif
-
-*/
-
-
   //***************************************************
-  if (is_Wifi == true) {start_wifi();}
-  if (is_Wifi == false) {start_eth();}
+  start_wifi();
+  start_eth();
 
   //***************************************************
 
   timeClient.begin();
   delay(2000);
   timeClient.update();
+
+//***** SERVER ***********************************************************************
+  server.on("/", handleRoot);
+  server.on("/login", handleLogin);
+  server.on("/inline", []() {
+    server.send(200, "text/plain", "this works without need of authentication");
+  });
+  server.on("/", handleRoot);
+  server.onNotFound(handleNotFound);
+  //here the list of headers to be recorded
+  const char *headerkeys[] = {"User-Agent", "Cookie"};
+  size_t headerkeyssize = sizeof(headerkeys) / sizeof(char *);
+  //ask server to track these headers
+  server.collectHeaders(headerkeys, headerkeyssize);
+  server.begin();
+  Serial.println("HTTP server started");
+  //**********************************************************************************
+
 }
 
 void start_wifi() {
-  Serial.print("Connecting to WiFi network ");
-  WiFi.mode(WIFI_STA);
+  //Configurar Wifi
+  if (!WiFi.config(wifiIP, wifiGateway, wifiSubnet)) {
+    Serial.println("Error al configurar la IP estática");
+  }
+  // Conectar a WiFi
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
-  Serial.println("");
-  ETH.end();
+
+  Serial.println("\nConectado a WiFi");
+  Serial.print("Dirección IP: ");
+  Serial.println(WiFi.localIP());
 }
 void start_eth() {
-  ETH.config(staticIP, gateway, subnet, dns, dns);
-  ETH.begin(ETH_PHY_W5500, 1, ETH_CS_PIN, ETH_INT_PIN, ETH_RST_PIN,
-                 SPI3_HOST, ETH_SCLK_PIN, ETH_MISO_PIN, ETH_MOSI_PIN);
-  // no funciona Wifi.end();
+  ETH.begin(ETH_PHY_W5500, 1, ETH_CS_PIN, ETH_INT_PIN, ETH_RST_PIN, SPI3_HOST, ETH_SCLK_PIN, ETH_MISO_PIN, ETH_MOSI_PIN);
+  ETH.config(IPAddress(192, 168, 1, 100), IPAddress(192, 168, 1, 1), IPAddress(255, 255, 255, 0));
 }
 
-
 void loop() {
+
+  //if (Serial.available()) {
+    serialData += Serial.readString() + "\n";  // Captura datos del puerto serie
+  //}
+  server.handleClient();
+
   char incomingByte;
   unsigned long t_unix_date1;
   t_unix_date1 = timeClient.getEpochTime();
@@ -140,19 +148,20 @@ void loop() {
   if (Serial.available() > 0) {
     // read the incoming byte:
     incomingByte = Serial.read();
-    if (incomingByte=='A') {
-    Serial.print("Wifi");
-    start_wifi();
+    if (incomingByte == 'H') {
+      Serial.println("W-->activa la Wifi");
+      Serial.println("E-->activa la Ethernet");
+      Serial.println("H-->Aquest menu");
+    }    
+    if (incomingByte == 'W') {
+      Serial.print("Wifi");
+      start_wifi();
     }
-    if (incomingByte=='E') {
-    Serial.print("Ethernet");
-    start_eth();
+    if (incomingByte == 'E') {
+      Serial.print("Ethernet");
+      start_eth();
     }
-    // say what you got:
-    Serial.print("I received: ");
-    Serial.println(incomingByte);
   }
-
 }
 
 void WiFiEvent(arduino_event_id_t event) {
@@ -163,8 +172,14 @@ void WiFiEvent(arduino_event_id_t event) {
     case ARDUINO_EVENT_WIFI_SCAN_DONE: Serial.println("Completed scan for access points"); break;
     case ARDUINO_EVENT_WIFI_STA_START: Serial.println("WiFi client started"); break;
     case ARDUINO_EVENT_WIFI_STA_STOP: Serial.println("WiFi clients stopped"); break;
-    case ARDUINO_EVENT_WIFI_STA_CONNECTED: Serial.println("Connected to access point"); break;
-    case ARDUINO_EVENT_WIFI_STA_DISCONNECTED: Serial.println("Disconnected from WiFi access point"); break;
+    case ARDUINO_EVENT_WIFI_STA_CONNECTED:
+      Serial.print("Connected to access point:");
+      Serial.println(ssid);
+      break;
+    case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
+      Serial.print("Disconnected from WiFi access point");
+      Serial.println(ssid);
+      break;
     case ARDUINO_EVENT_WIFI_STA_AUTHMODE_CHANGE: Serial.println("Authentication mode of access point has changed"); break;
     case ARDUINO_EVENT_WIFI_STA_GOT_IP:
       Serial.print("Obtained IP address: ");
@@ -191,78 +206,109 @@ void WiFiEvent(arduino_event_id_t event) {
     case ARDUINO_EVENT_ETH_GOT_IP: Serial.println("Obtained IP address"); break;
     default: break;
   }
-  /*
-  switch (event) {
-// wifi
-    case ARDUINO_EVENT_ETH_START:
-      Serial.print("ETH Started");
-      //set eth hostname here
-      ETH.setHostname("esp32-ethernet");
-      break;
-    case ARDUINO_EVENT_ETH_START:
-      Serial.print("ETH Started");
-      //set eth hostname here
-      ETH.setHostname("esp32-ethernet");
-      break;
-    case ARDUINO_EVENT_ETH_START:
-      Serial.print("ETH Started");
-      //set eth hostname here
-      ETH.setHostname("esp32-ethernet");
-      break;
-
-    case ARDUINO_EVENT_ETH_START:
-      Serial.print("ETH Started");
-      //set eth hostname here
-      ETH.setHostname("esp32-ethernet");
-      break;
-    case ARDUINO_EVENT_ETH_CONNECTED:
-      Serial.println("ETH Connected, ip->");
-      Serial.println(ETH.localIP());
-      break;
-    case ARDUINO_EVENT_ETH_GOT_IP:
-      Serial.print("ETH MAC: ");
-      Serial.print(ETH.macAddress());
-      Serial.print(", IPv4: ");
-      Serial.print(ETH.localIP());
-      if (ETH.fullDuplex()) {
-        Serial.print(", FULL_DUPLEX");
-      }
-      Serial.print(", ");
-      Serial.print(ETH.linkSpeed());
-      Serial.println("Mbps");
-      eth_connected = true;
-      break;
-    case ARDUINO_EVENT_ETH_DISCONNECTED:
-      Serial.println("ETH Disconnected");
-      eth_connected = false;
-      break;
-    case ARDUINO_EVENT_ETH_STOP:
-      Serial.println("ETH Stopped");
-      eth_connected = false;
-      break;
-    default:
-      break;
-  }
-  */
 }
-/*
-void testClient(const char *host, uint16_t port) {
-  Serial.print("\nconnecting to ");
-  Serial.println(host);
 
-  WiFiClient client;
-  if (!client.connect(host, port)) {
-    Serial.println("connection failed");
+
+
+//Check if header is present and correct
+bool is_authentified() {
+  Serial.println("Enter is_authentified");
+  if (server.hasHeader("Cookie")) {
+    Serial.print("Found cookie: ");
+    String cookie = server.header("Cookie");
+    Serial.println(cookie);
+    if (cookie.indexOf("ESPSESSIONID=1") != -1) {
+      Serial.println("Authentication Successful");
+      return true;
+    }
+  }
+  Serial.println("Authentication Failed");
+  return false;
+}
+
+//login page, also called for disconnect
+void handleLogin() {
+  String msg;
+  if (server.hasHeader("Cookie")) {
+    Serial.print("Found cookie: ");
+    String cookie = server.header("Cookie");
+    Serial.println(cookie);
+  }
+  if (server.hasArg("DISCONNECT")) {
+    Serial.println("Disconnection");
+    server.sendHeader("Location", "/login");
+    server.sendHeader("Cache-Control", "no-cache");
+    server.sendHeader("Set-Cookie", "ESPSESSIONID=0");
+    server.send(301);
     return;
   }
-  client.printf("GET / HTTP/1.1\r\nHost: %s\r\n\r\n", host);
-  while (client.connected() && !client.available())
-    ;
-  while (client.available()) {
-    Serial.write(client.read());
+  if (server.hasArg("PASSWORD")) {
+   // if (server.arg("USERNAME") == "admin" && server.arg("PASSWORD") == "admin") {
+    if (server.arg("PASSWORD") == "admin") {
+      server.sendHeader("Location", "/");
+      server.sendHeader("Cache-Control", "no-cache");
+      server.sendHeader("Set-Cookie", "ESPSESSIONID=1");
+      server.send(301);
+      Serial.println("Log in Successful");
+      return;
+    }
+    msg = "Wrong username/password! try again.";
+    Serial.println("Log in Failed");
   }
-
-  Serial.println("closing connection\n");
-  client.stop();
-}
+  /*
+    String content = "<html><body><form action='/login' method='POST'>Entre el password<br>";
+  content += "User:<input type='text' name='USERNAME' placeholder='user name'><br>";
+  content += "Password:<input type='password' name='PASSWORD' placeholder='password'><br>";
+  content += "<input type='submit' name='SUBMIT' value='Submit'></form>" + msg + "<br>";
+  content += "You also can go <a href='/inline'>here</a></body></html>";
 */
+  String content = "<html><body><form action='/login' method='POST'>Entre el password<br>";
+  content += "Password:<input type='password' name='PASSWORD' placeholder='password'><br>";
+  content += "<input type='submit' name='SUBMIT' value='Submit'></form>" + msg + "<br>";
+  content += "També pots anar <a href='/inline'>aquí</a></body></html>";
+  server.send(200, "text/html", content);
+}
+
+//root page can be accessed only if authentication is ok
+void handleRoot() {
+  Serial.println("Enter handleRoot");
+  String header;
+  if (!is_authentified()) {
+    server.sendHeader("Location", "/login");
+    server.sendHeader("Cache-Control", "no-cache");
+    server.send(301);
+    return;
+  }
+  String content = "<html><body><H2>Hola, estas conectat a la Wifi de gestor de hora NTP de repsol</H2><br>";
+  if (server.hasHeader("User-Agent")) {
+    content += "the user agent used is : " + server.header("User-Agent") + "<br><br>";
+  }
+  content += "Podeu accedir a aquesta pàgina fins que us <a href=\"/login?DISCONNECT=YES\">desconnecteu</a></body></html>";
+  
+  content += "<form>";
+  content += "<textarea id='serialBox' rows='10' cols='50'>" + serialData + "</textarea>";
+  content += "</form>";
+  content += "<script>document.getElementById('serialBox').scrollTop = document.getElementById('serialBox').scrollHeight;</script>";
+  content += "</body></html>";
+  
+  server.send(200, "text/html", content);
+}
+
+//no need authentication
+void handleNotFound() {
+  String message = "File Not Found\n\n";
+  message += "URI: ";
+  message += server.uri();
+  message += "\nMethod: ";
+  message += (server.method() == HTTP_GET) ? "GET" : "POST";
+  message += "\nArguments: ";
+  message += server.args();
+  message += "\n";
+
+
+
+  for (uint8_t i = 0; i < server.args(); i++) {
+    message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
+  }
+  server.send(404, "text/plain", message);
+}
