@@ -37,52 +37,79 @@
 #include "time.h"
 #include <WebServer.h>
 
-//const char *ssid = "MI-9";
-//const char *password = "viscaTarracoII";
+const char *ssid = "MI-9";
+const char *password = "viscaTarracoII";
 
 //const char *ssid = "ELECTRONICA";
 //const char *password = "repsol01";
 
-const char *ssid = "MOVISTAR-WIFI6-6810";
-const char *password = "N9HEPszqVUT93Js79xqs";
+//const char *ssid = "MOVISTAR-WIFI6-6810";
+//const char *password = "N9HEPszqVUT93Js79xqs";
 
 
-// Ntp Repsol
-const char *ntpServer_REPSOL = "150.214.94.10";
-const long gmtOffset_sec = 0;  //3600L * 1;
-const int daylightOffset_sec = 0;
+
 struct tm timeinfo;
 
 char dt[16];
 char tm[16];
 char sm[16];
 
-// WIFI Configuración de IP estática
-IPAddress wifiIP(192, 168, 1, 10);  // IP estática para Wi-Fi
-IPAddress wifiGateway(192, 168, 1, 1);
-IPAddress wifiSubnet(255, 255, 255, 0);
-IPAddress wifiprimaryDNS(8, 8, 8, 8);    // Opcional
-IPAddress wifisecondaryDNS(8, 8, 4, 4);  // Opcional
 
-// Ethernet configuracion de IP estatica
-IPAddress staticIP(192, 168, 1, 11);
-IPAddress gateway(192, 168, 1, 1);
-IPAddress subnet(255, 255, 255, 0);
-// la dns , si no es correcte no te access a internet i no es pot accedir al servidor ntp
-// dns de casa -->80.58.61.250
-IPAddress dns(80, 58, 61, 250);
+/*
+  // Ntp test
+  const char *ntpServer = "hora.rediris.es";
+  const long gmtOffset_sec = 0;  //3600L * 1;
+  const int daylightOffset_sec = 0;
+
+  // WIFI Configuración de IP estática
+  IPAddress wifiIP(192, 168, 1, 10);  // IP estática para Wi-Fi
+  IPAddress wifiGateway(192, 168, 1, 1);
+  IPAddress wifiSubnet(255, 255, 255, 0);
+  IPAddress wifiprimaryDNS(8, 8, 8, 8);    // Opcional
+  IPAddress wifisecondaryDNS(8, 8, 4, 4);  // Opcional
+
+  // Ethernet configuracion de IP estatica
+  IPAddress ETHstaticIP(192, 168, 1, 11);
+  IPAddress ETHgateway(192, 168, 1, 1);
+  IPAddress ETHsubnet(255, 255, 255, 0);
+  // la dns , si no es correcte no te access a internet i no es pot accedir al servidor ntp
+  // dns de casa -->80.58.61.250
+  IPAddress dns(80, 58, 61, 250);
+*/
+  // Ntp Repsol
+  const char *ntpServer = "172.24.147.1";
+  //const char *ntpServer = "hora.rediris.es";
+  const long gmtOffset_sec = 0;  //3600L * 1;
+  const int daylightOffset_sec = 0;
+  // WIFI Configuración de IP estática
+  IPAddress wifiIP(192, 168, 1, 10);  // IP estática para Wi-Fi
+  IPAddress wifiGateway(192, 168, 1, 1);
+  IPAddress wifiSubnet(255, 255, 255, 0);
+  IPAddress wifiprimaryDNS(8, 8, 8, 8);    // Opcional
+  IPAddress wifisecondaryDNS(8, 8, 4, 4);  // Opcional
+
+  // Ethernet configuracion de IP estatica
+  IPAddress ETHstaticIP(10, 82, 103, 215);
+  IPAddress ETHgateway(10, 82, 103, 209);
+  IPAddress ETHsubnet(255, 255, 255, 240);
+  // la dns , si no es correcte no te access a internet i no es pot accedir al servidor ntp
+  // dns de casa -->80.58.61.250
+  IPAddress dns(80, 58, 61, 250);
+
+
 
 WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP, ntpServer_REPSOL, 3600, 60000);
+NTPClient timeClient(ntpUDP, ntpServer, 3600, 60000);
 // server
 WebServer server(80);
 String serialData = "";
+
 void setup() {
   Serial.begin(115200);
   WiFi.onEvent(WiFiEvent);
 
   //***************************************************
-  start_wifi();
+  //start_wifi();
   start_eth();
 
   //***************************************************
@@ -97,7 +124,7 @@ void setup() {
   server.on("/inline", []() {
     server.send(200, "text/plain", "this works without need of authentication");
   });
-  server.on("/", handleRoot);
+
   server.onNotFound(handleNotFound);
   //here the list of headers to be recorded
   const char *headerkeys[] = {"User-Agent", "Cookie"};
@@ -128,7 +155,9 @@ void start_wifi() {
 }
 void start_eth() {
   ETH.begin(ETH_PHY_W5500, 1, ETH_CS_PIN, ETH_INT_PIN, ETH_RST_PIN, SPI3_HOST, ETH_SCLK_PIN, ETH_MISO_PIN, ETH_MOSI_PIN);
-  ETH.config(IPAddress(192, 168, 1, 100), IPAddress(192, 168, 1, 1), IPAddress(255, 255, 255, 0));
+//  ETH.config(IPAddress(192, 168, 1, 100), IPAddress(192, 168, 1, 1), IPAddress(255, 255, 255, 0));
+  ETH.config(ETHstaticIP, ETHgateway, ETHsubnet);
+
 }
 
 void loop() {
@@ -151,6 +180,7 @@ void loop() {
     if (incomingByte == 'H') {
       Serial.println("W-->activa la Wifi");
       Serial.println("E-->activa la Ethernet");
+      Serial.println("S-->Status IPs");
       Serial.println("H-->Aquest menu");
     }    
     if (incomingByte == 'W') {
@@ -160,6 +190,16 @@ void loop() {
     if (incomingByte == 'E') {
       Serial.print("Ethernet");
       start_eth();
+    }
+    if (incomingByte == 'S') {
+      Serial.print("Wifi IP address: ");
+      Serial.println(WiFi.localIP());
+      Serial.print("Ethernet IP Address: "); 
+      Serial.println(ETH.localIP());
+      Serial.print("BUSCA EN SERVIDOR ntp: "); 
+      Serial.println(ntpServer);
+      Serial.println() ;
+   
     }
   }
 }
@@ -199,11 +239,15 @@ void WiFiEvent(arduino_event_id_t event) {
     case ARDUINO_EVENT_WIFI_AP_GOT_IP6: Serial.println("AP IPv6 is preferred"); break;
     case ARDUINO_EVENT_WIFI_STA_GOT_IP6: Serial.println("STA IPv6 is preferred"); break;
     case ARDUINO_EVENT_ETH_GOT_IP6: Serial.println("Ethernet IPv6 is preferred"); break;
-    case ARDUINO_EVENT_ETH_START: Serial.println("Ethernet started"); break;
+    case ARDUINO_EVENT_ETH_START: Serial.print("Ethernet started:"); 
+          Serial.println(ETH.localIP());
+          break;
     case ARDUINO_EVENT_ETH_STOP: Serial.println("Ethernet stopped"); break;
     case ARDUINO_EVENT_ETH_CONNECTED: Serial.println("Ethernet connected"); break;
     case ARDUINO_EVENT_ETH_DISCONNECTED: Serial.println("Ethernet disconnected"); break;
-    case ARDUINO_EVENT_ETH_GOT_IP: Serial.println("Obtained IP address"); break;
+    case ARDUINO_EVENT_ETH_GOT_IP: Serial.print("Obtained IP address:"); 
+      Serial.println(ETH.localIP());
+      break;
     default: break;
   }
 }
