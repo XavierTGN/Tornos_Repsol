@@ -23,6 +23,8 @@ https://mischianti.org/images-to-byte-array-online-converter-cpp-arduino/
 
 ![image](https://github.com/user-attachments/assets/f3b7dc4e-2405-4504-bd81-8fd9c0f84e7c)
 
+1/5/25-->ultima carpeta de treball:Static_IP_NTP
+
 
 https://www.tempmail.us.com/es/hover/encantador-resaltado-de-fila-de-tabla-con-css-al-pasar-el-cursor
 
