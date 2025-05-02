@@ -72,10 +72,13 @@ Mask : 255.255.255.240
 Gateway: 10.82.103.209  
 
 Servidor NTP: 172.24.147.1 
+
 Servidores NTp de Repsol (UTC+01:00)
    * relojmaestrotc3.rm.gr.repsolypf.com--->172.18.155.2
    * relojmaestroca1.rm.gr.repsolypf.com--->172.24.147.1
    * relojmaestroca3.rm.gr.repsolypf.com--->172.24.147.2
+   *- Ultima direccion IP (nueva)---------->172.18.155.1
+                                ----------->172.18.155.2
 
 Direcciones para instalación en puerta:  
 *-Master_1, el de entrando a la derecha----10.82.207.13  
