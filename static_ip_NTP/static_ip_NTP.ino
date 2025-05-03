@@ -111,7 +111,6 @@ NTPClient timeClient(ntpUDP, ntpServer, 3600, 60000);
 // server
 WebServer server(80);
 String serialData = "";
-bool checkboxState = false;
 
 
 void setup() {
@@ -344,17 +343,7 @@ void handleLogin() {
   content += "També pots anar <a href='/inline'>aquí</a></body></html>";
   server.send(200, "text/html", content);
 }
-void handleUpdate() {
-  if (server.hasArg("checkbox")) {
-    checkboxState = true;
-  } else {
-    checkboxState = false;
-  }
-  server.sendHeader("Location", "/");
-  server.send(303);
-  Serial.print("checkbox: ");
-  Serial.println(checkboxState);
-}
+
 //root page can be accessed only if authentication is ok
 void handleRoot() {
   Serial.println("Enter handleRoot");
@@ -391,12 +380,7 @@ void handleRoot() {
   content += "IP Ethernet..:" + ETH.localIP().toString() + "</div>";
   content += "<div id='verd'>Servidor NTP :" + String(ntpServer) + "</div>";
   content += String(tm) + " Podeu accedir a aquesta pagina fins que us <a href=\"/login?DISCONNECT=YES\">desconnecteu</a></body></html>";
-  content += "<h1>Control de Checkbox</h1>";
-  //content += "<form action='/update'>";
-  content +=  "<input type='checkbox' name='checkbox' onchange='this.form.submit()' ";
-  if (checkboxState) content += "checked";
-  content += "> Activar";
-  //content +=   "</form>";
+
   content += "<form>";
   content += "<p>Valor actual: <span id='valor'>Cargando...</span></p><textarea id='serialBox' rows='10' cols='50'>" + serialData + "</textarea>";
   content += "</form>";
