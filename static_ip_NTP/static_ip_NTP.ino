@@ -111,6 +111,7 @@ NTPClient timeClient(ntpUDP, ntpServer, 3600, 60000);
 // server
 WebServer server(80);
 String serialData = "";
+bool checkboxState = false;
 
 
 void setup() {
@@ -343,7 +344,17 @@ void handleLogin() {
   content += "També pots anar <a href='/inline'>aquí</a></body></html>";
   server.send(200, "text/html", content);
 }
-
+void handleUpdate() {
+  if (server.hasArg("checkbox")) {
+    checkboxState = true;
+  } else {
+    checkboxState = false;
+  }
+  server.sendHeader("Location", "/");
+  server.send(303);
+  Serial.print("checkbox: ");
+  Serial.println(checkboxState);
+}
 //root page can be accessed only if authentication is ok
 void handleRoot() {
   Serial.println("Enter handleRoot");
@@ -355,29 +366,37 @@ void handleRoot() {
     return;
   }
   String content = "<html><head><style>#vermell {color: red;border: 5px solid currentcolor;}#verd {color: black;border: 5px solid green;}</style></head>";
-  content *= "<button onclick='window.location.reload();'>Actualizar Página</button><body><H2>Hola, estas conectat a la Wifi de gestor de hora NTP de repsol</H2><br>";
+  content += "<button onclick='window.location.reload();'>Actualizar Pagina</button><body><H2>Hola, estas conectat a la Wifi de gestor de hora NTP de repsol</H2><br>";
+/*
   if (server.hasHeader("User-Agent")) {
     content += "the user agent used is : " + server.header("User-Agent") + "<br><br>";
   }
-
-  if (WiFi.status() == WL_CONNECTED)){
-      content += "<div id=" verd ">";
+*/
+  if (WiFi.status() == WL_CONNECTED){
+      content += "<div id='verd'>";
     }
   else {
-    content += "<div id=" vermell ">";
+    content += "<div id='vermell'>";
   }
-  content += "IP wifi.....:" + String(WiFi.localIP()) + "</div>";
+  content += "IP wifi.........:" + WiFi.localIP().toString() + "</div>";
 
 
-  if (ETH.linkStatus() == LinkON) {
-    content += "<div id=" verd ">";
+  if (ETH.linkUp()) {
+    content += "<div id='verd'>";
   } else {
-    content += "<div id=" vermell ">";
+    content += "<div id='vermell'>";
   }
-  content += "IP Ethernet.:" + String(ETH.localIP()) + "</div>";
-  content += "Servidor NTP :" + ntpServer;
-  content += String(tm) + " Podeu accedir a aquesta pagina fins que us <a href=\"/login?DISCONNECT=YES\">desconnecteu</a></body></html>";
 
+
+  content += "IP Ethernet..:" + ETH.localIP().toString() + "</div>";
+  content += "<div id='verd'>Servidor NTP :" + String(ntpServer) + "</div>";
+  content += String(tm) + " Podeu accedir a aquesta pagina fins que us <a href=\"/login?DISCONNECT=YES\">desconnecteu</a></body></html>";
+  content += "<h1>Control de Checkbox</h1>";
+  //content += "<form action='/update'>";
+  content +=  "<input type='checkbox' name='checkbox' onchange='this.form.submit()' ";
+  if (checkboxState) content += "checked";
+  content += "> Activar";
+  //content +=   "</form>";
   content += "<form>";
   content += "<p>Valor actual: <span id='valor'>Cargando...</span></p><textarea id='serialBox' rows='10' cols='50'>" + serialData + "</textarea>";
   content += "</form>";
