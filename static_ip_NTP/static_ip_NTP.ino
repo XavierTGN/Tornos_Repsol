@@ -113,6 +113,7 @@ WebServer server(80);
 String serialData = "";
 
 
+
 void setup() {
   //configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
   Serial.begin(115200);
@@ -340,6 +341,7 @@ void handleLogin() {
   String content = "<html><head><meta http-equiv='refresh' content='30'></head><body><form action='/login' method='POST'>Entre el password<br>";
   content += "Password:<input type='password' name='PASSWORD' placeholder='password'><br>";
   content += "<input type='submit' name='SUBMIT' value='Submit'></form>" + msg + "<br>";
+  content += "<svg width='100' height='100' ><circle cx='100' cy='50' r='40' stroke='green' stroke-width='4' fill='yellow' />Sorry, your browser does not support inline SVG.</svg>";
   content += "També pots anar <a href='/inline'>aquí</a></body></html>";
   server.send(200, "text/html", content);
 }
