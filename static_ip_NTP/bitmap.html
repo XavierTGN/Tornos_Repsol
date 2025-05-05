@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>LED Control</title>
+    <style>
+        .led {
+            fill: red;
+        }
+        .led.on {
+            fill: green;
+        }
+        .led-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="leds">
+        <!-- Dibujar 9 LEDs con botones al lado -->
+        <div class="led-container">
+            <svg width="50" height="50">
+                <circle cx="25" cy="25" r="10" class="led" id="led1"></circle>
+            </svg>
+            <button onclick="toggleLED('led1')">LED 1</button>
+        </div>
+        <div class="led-container">
+            <svg width="50" height="50">
+                <circle cx="25" cy="25" r="10" class="led" id="led2"></circle>
+            </svg>
+            <button onclick="toggleLED('led2')">LED 2</button>
+        </div>
+        <div class="led-container">
+            <svg width="50" height="50">
+                <circle cx="25" cy="25" r="10" class="led" id="led3"></circle>
+            </svg>
+            <button onclick="toggleLED('led3')">LED 3</button>
+        </div>
+        <div class="led-container">
+            <svg width="50" height="50">
+                <circle cx="25" cy="25" r="10" class="led" id="led4"></circle>
+            </svg>
+            <button onclick="toggleLED('led4')">LED 4</button>
+        </div>
+        <div class="led-container">
+            <svg width="50" height="50">
+                <circle cx="25" cy="25" r="10" class="led" id="led5"></circle>
+            </svg>
+            <button onclick="toggleLED('led5')">LED 5</button>
+        </div>
+        <div class="led-container">
+            <svg width="50" height="50">
+                <circle cx="25" cy="25" r="10" class="led" id="led6"></circle>
+            </svg>
+            <button onclick="toggleLED('led6')">LED 6</button>
+        </div>
+        <div class="led-container">
+            <svg width="50" height="50">
+                <circle cx="25" cy="25" r="10" class="led" id="led7"></circle>
+            </svg>
+            <button onclick="toggleLED('led7')">LED 7</button>
+        </div>
+        <div class="led-container">
+            <svg width="50" height="50">
+                <circle cx="25" cy="25" r="10" class="led" id="led8"></circle>
+            </svg>
+            <button onclick="toggleLED('led8')">LED 8</button>
+        </div>
+        <div class="led-container">
+            <svg width="50" height="50">
+                <circle cx="25" cy="25" r="10" class="led" id="led9"></circle>
+            </svg>
+            <button onclick="toggleLED('led9')">LED 9</button>
+        </div>
+    </div>
+
+    <script>
+        function toggleLED(id) {
+            const led = document.getElementById(id);
+            led.classList.toggle('on');
+        }
+    </script>
+</body>
+</html>
