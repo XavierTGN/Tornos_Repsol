@@ -8,6 +8,7 @@ WebServer server(80);
 
 // Estados de los círculos
 bool estados[4] = {false, false, false, false};
+String mensaje = "Texto desde Arduino"; // Mensaje inicial
 
 // HTML con actualización automática
 const char htmlPage[] PROGMEM = R"rawliteral(
@@ -33,8 +34,15 @@ const char htmlPage[] PROGMEM = R"rawliteral(
                 }
             });
         }
-
+        function actualizarMensaje() {
+            fetch("/message")
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById("mensaje").innerText = data;
+            });
+        }
         setInterval(actualizarEstados, 2000); // Actualiza cada 2 segundos
+        setInterval(actualizarMensaje, 3000); // Actualiza el mensaje cada 3 segundos
     </script>
 </head>
 <body>
@@ -50,7 +58,11 @@ const char htmlPage[] PROGMEM = R"rawliteral(
     <button onclick="cambiarEstado(1)">Botón 2</button>
     <button onclick="cambiarEstado(2)">Botón 3</button>
     <button onclick="cambiarEstado(3)">Botón 4</button>
+    <br/><br/>
+    <h2>Mensaje desde Arduino:</h2>
+    <div id="mensaje">Cargando...</div>
 </body>
+
 </html>
 )rawliteral";
 
@@ -75,7 +87,10 @@ void handleStatus() {
     json += "]";
     server.send(200, "application/json", json);
 }
-
+void handleMessage() {
+    Serial.println("handlMessage");
+    server.send(200, "text/plain", mensaje);
+}
 void handleRoot() {
     server.send(200, "text/html", htmlPage);
 }
@@ -94,6 +109,7 @@ void setup() {
     server.on("/", handleRoot);
     server.on("/toggle", handleToggle);
     server.on("/status", handleStatus); // Nueva ruta para estado de los círculos
+    server.on("/message", handleMessage);
 
     server.begin();
 }
@@ -106,6 +122,10 @@ void loop() {
     if (millis() - lastChange > 5000) {
         estados[0] = !estados[0]; // Alternar círculo 0 como prueba
         lastChange = millis();
+
+        mensaje = "Hora: " + String(millis() / 1000) + "s"; // Simula actualización dinámica
+        lastChange = millis();
     }
+
 }
 
