@@ -14,6 +14,12 @@
 #include <ESP32Time.h>
 #include <Ethernet.h>
 
+// IP de Repsol
+IPAddress staticIP(10, 82, 103, 215);
+IPAddress gateway(10, 82, 103, 209);
+IPAddress subnet(255, 255, 255, 240);
+IPAddress dns(172, 16, 138, 119);
+
 //*** Temps **************************
 struct tm Hora_RTC;
 char dt[16];
@@ -22,34 +28,30 @@ char sm[16];
 unsigned long t_unix_date1;
 int data = 0;
 //************************************
-
-// IP de Repsol
-IPAddress staticIP(10, 82, 103, 215);
-IPAddress gateway(10, 82, 103, 209);
-IPAddress subnet(255, 255, 255, 240);
-IPAddress dns(172, 16, 138, 119);
-
 WiFiUDP ntpUDP;
-NTPClient Hora_NTP(ntpUDP, "172.18.155.2", 3600, 360000);
+NTPClient Hora_NTP(ntpUDP, "172.18.155.2", 3600, 60000);  //360000);
 
 bool eth_connected = false;
+
+String icono_red_ok = "✅";
+String icono_red_ko = "❌";
 
 void setup() {
   Serial.begin(115200);
 
-  #ifdef ETH_POWER_PIN
-    pinMode(ETH_POWER_PIN, OUTPUT);
-    digitalWrite(ETH_POWER_PIN, HIGH);
-  #endif
+#ifdef ETH_POWER_PIN
+  pinMode(ETH_POWER_PIN, OUTPUT);
+  digitalWrite(ETH_POWER_PIN, HIGH);
+#endif
 
   WiFi.onEvent(WiFiEvent);
 
   if (!ETH.begin(
-      ETH_PHY_W5500,         // PHY
-      1,                     // SPI bus num
-      ETH_CS_PIN, ETH_INT_PIN, ETH_RST_PIN,
-      SPI3_HOST,             // SPI host
-      ETH_SCLK_PIN, ETH_MISO_PIN, ETH_MOSI_PIN)) {
+        ETH_PHY_W5500,  // PHY
+        1,              // SPI bus num
+        ETH_CS_PIN, ETH_INT_PIN, ETH_RST_PIN,
+        SPI3_HOST,  // SPI host
+        ETH_SCLK_PIN, ETH_MISO_PIN, ETH_MOSI_PIN)) {
     Serial.println("ETH start Failed!");
   }
 
@@ -59,37 +61,31 @@ void setup() {
     Serial.println("✅ IP estática configurada.");
   }
 
-  Hora_RTC.tm_year = 2019 - 1900;  // Año desde 1900
-  Hora_RTC.tm_mon = 0;             // Mes (0-11)
-  Hora_RTC.tm_mday = 1;            // Día del mes
-  Hora_RTC.tm_hour = 0;
-  Hora_RTC.tm_min = 0;
-  Hora_RTC.tm_sec = 0;
-  time_t t = mktime(&Hora_RTC);
-  struct timeval now = { .tv_sec = t };
-  settimeofday(&now, NULL);
-}
 
-void loop() {
-  delay(5000);
   if (eth_connected) {
     Serial.print("PING: IP = ");
     Serial.println(ETH.localIP());
   }
-  // *** temps *****
-  if (!getLocalTime(&Hora_RTC)) {
-    Serial.println("Error obteniendo la hora");
-  }
-  t_unix_date1 = Hora_NTP.getEpochTime();
-  sprintf(tm, "⏰UNIX#: %4d-%02d-%02d %02d:%02d:%02d\n", year(t_unix_date1), month(t_unix_date1), day(t_unix_date1), hour(t_unix_date1), minute(t_unix_date1), second(t_unix_date1));
-  Serial.print(tm);
-  //*******************
-  //  el Update, solo enviará una solicitud al servidor NTP si ha pasado el intervalo de actualización configurado
-  Hora_NTP.update();
+}
 
-  // hora
-  sprintf(tm, "⏰RTC #: %4d-%02d-%02d %02d:%02d:%02d\n", Hora_RTC.tm_year + 1900, Hora_RTC.tm_mon, Hora_RTC.tm_mday, Hora_RTC.tm_hour, Hora_RTC.tm_min, Hora_RTC.tm_sec);
-  Serial.println(tm);
+void loop() {
+  delay(2000);
+  // *** temps *****
+  t_unix_date1 = Hora_NTP.getEpochTime();
+  struct tm Hora_RTC;
+  if (eth_connected == true) {
+  sprintf(tm, "✅⏰NTP:UNIX#: %4d-%02d-%02d %02d:%02d:%02d\n" , year(t_unix_date1), month(t_unix_date1), day(t_unix_date1), hour(t_unix_date1), minute(t_unix_date1), second(t_unix_date1));
+    }else{
+  sprintf(tm, "❌⏰NTP:UNIX#: %4d-%02d-%02d %02d:%02d:%02d\n" , year(t_unix_date1), month(t_unix_date1), day(t_unix_date1), hour(t_unix_date1), minute(t_unix_date1), second(t_unix_date1));
+  }
+  Serial.print(tm);
+  //*********************************************************
+  //  el Update, solo enviará una solicitud al servidor NTP
+  // si ha pasado el intervalo de actualización configurado
+  Hora_NTP.update();
+  // *********************************************************
+
+  Lleigir_serial();
 }
 
 void WiFiEvent(arduino_event_id_t event) {
@@ -105,5 +101,34 @@ void WiFiEvent(arduino_event_id_t event) {
       break;
     default:
       break;
+  }
+}
+
+void Lleigir_serial() {
+  char incomingByte;
+  // send data only when you receive data:
+  if (Serial.available() > 0) {
+    // read the incoming byte:
+    incomingByte = Serial.read();
+    if (incomingByte == 'H') {
+      Serial.println("W-->activa la Wifi");
+      Serial.println("E-->activa la Ethernet");
+      Serial.println("S-->Status IPs");
+      Serial.println("H-->Aquest menu");
+    }
+    if (incomingByte == 'W') {
+      Serial.print("Wifi");
+    }
+    if (incomingByte == 'U') {
+      Serial.print("Update date");
+      t_unix_date1 = Hora_NTP.getEpochTime();
+    }
+    if (incomingByte == '-') {
+      // Restar una hora (3600 segundos)
+      t_unix_date1 -= 3600;
+    }
+    if (incomingByte == 'S') {
+      Serial.println("Actualizando hora de RTC desde UNIX");
+    }
   }
 }
