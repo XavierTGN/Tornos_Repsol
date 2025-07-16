@@ -15,6 +15,7 @@ IPAddress staticIP(10, 82, 103, 215);
 IPAddress gateway(10, 82, 103, 209);
 IPAddress subnet(255, 255, 255, 240);
 IPAddress dns(172, 16, 138, 119);
+int data = 0;
 
 WiFiUDP ntpUDP;
 NTPClient Hora_NTP(ntpUDP, "172.18.155.2", 0, 60000);
@@ -22,7 +23,6 @@ NTPClient Hora_NTP(ntpUDP, "172.18.155.2", 0, 60000);
 bool eth_connected = false;
 WiFiServer server(80);
 
-unsigned long t_unix_date1;
 char tm[64];
 
 // *** Estado de estaciones ***
@@ -65,22 +65,14 @@ void setup() {
 
 void loop() {
   Hora_NTP.update();
-
-
-  t_unix_date1 = Hora_NTP.getEpochTime();
-
-
-    time_t utc = Hora_NTP.getEpochTime();
+  time_t utc = Hora_NTP.getEpochTime();
   // Convertir UTC a hora local Madrid (con horario verano/invierno)
   time_t horaLocalMadrid = Madrid.toLocal(utc);
-
   setTime(horaLocalMadrid);  // Actualiza TimeLib con hora local
-
 
   WiFiClient client = server.available();
   if (client) {
-    Serial.println("🌐 Nuevo cliente conectado");
-
+    //Serial.println("🌐 Nuevo cliente conectado");
     String req = client.readStringUntil('\r');
     client.flush();
     if (req.indexOf("GET /accion") >= 0) {
@@ -168,7 +160,7 @@ void loop() {
     }
 
     client.println("</form>");
-
+    opcions_teclat();
     client.stop();
     //Serial.println("❎ Cliente desconectado");
   }
@@ -181,10 +173,6 @@ void handleAjaxHora(WiFiClient& client) {
   client.println("Content-Type: text/plain; charset=utf-8");
   client.println("Connection: close");
   client.println();
-
-  //sprintf(tm, "%04d-%02d-%02d %02d:%02d:%02d",
-  //        year(t_unix_date1), month(t_unix_date1), day(t_unix_date1),
-  //        hour(t_unix_date1), minute(t_unix_date1), second(t_unix_date1));
 
   snprintf(tm, sizeof(tm), "%04d-%02d-%02d %02d:%02d:%02d",
            year(), month(), day(), hour(), minute(), second());          
@@ -208,4 +196,24 @@ void WiFiEvent(arduino_event_id_t event) {
 }
 void Comprobar_comunicaciones_I2C(){
   // Recorrer todas las estaciones I2C para comprobar la counicación
+}
+void opcions_teclat() {
+  if (Serial.available() > 0) {
+    data = Serial.read();
+    //Serial.println(data, DEC);
+    if (data == 'S') {
+      estacionesConectadas[3]=true;
+      delay(200);
+    }
+    if (data == 'L') {
+      estacionesConectadas[3]=false;
+      delay(1000);
+    }
+    if (data == '-') {  // resta 1 hora
+      delay(200);
+    }
+    if (data == 'U') {  // actualiza hora
+      delay(200);
+    }
+  }
 }
